@@ -75,32 +75,68 @@
     }
   });
 
-  // svelte-ignore state_referenced_locally
-  let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));;
-  // svelte-ignore state_referenced_locally
-  let parameterUnitParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
+  let parameterParsingStates: Record<number, ParsingState> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, getInitialParsingState()]))
+  );
+
+  let parameterUnitParsingStates: Record<number, ParsingState> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, getInitialParsingState()]))
+  );
+
+  let parserIds: Record<number, number> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, appState.nextParserId++]))
+  );
+
+  let columnStatements: Record<number, Statement | null> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, null]))
+  );
+
   // svelte-ignore state_referenced_locally
   let nameParsingStates: ParsingState[] = $state(Array.from({ length: numInterpolationDefs }, () => getInitialParsingState()));
 
-  // svelte-ignore state_referenced_locally
-  let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
-  // svelte-ignore state_referenced_locally
-  let columnStatements: (Statement | null)[] = $state(Array(numColumns).fill(null));
   let columnParsePendingCount = $state(0);
 
   const columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
   const columnParseRuns: Map<number, number> = new Map();
   let inColumnParseDebouncer = $state(false);
 
+  $effect.pre(() => {
+    for (const id of dataTableCell.columnIds) {
+      if (!parameterParsingStates[id]) {
+        parameterParsingStates[id] = getInitialParsingState();
+      }
+      if (!parameterUnitParsingStates[id]) {
+        parameterUnitParsingStates[id] = getInitialParsingState();
+      }
+      if (!parserIds[id]) {
+        parserIds[id] = appState.nextParserId++;
+      }
+      if (columnStatements[id] === undefined) {
+        columnStatements[id] = null;
+      }
+    }
+    
+    if (nameParsingStates.length !== dataTableCell.interpolationDefinitions.length) {
+      const newLength = dataTableCell.interpolationDefinitions.length;
+      nameParsingStates = Array.from({ length: newLength }, (_, i) => nameParsingStates[i] || getInitialParsingState());
+    }
+  });
+
   let parsingError = $derived.by(() => {
-    return parameterParsingStates.some(value => value.parsingError) ||
-           parameterUnitParsingStates.some(value => value.parsingError);
+    return dataTableCell.columnIds.some(id => parameterParsingStates[id]?.parsingError ?? false) ||
+           dataTableCell.columnIds.some(id => parameterUnitParsingStates[id]?.parsingError ?? false) ||
+           nameParsingStates.some(value => value.parsingError);
   });
 
   let parsePending = $derived.by(() => {
     return columnParsePendingCount > 0 ||
-           parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
-           parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           dataTableCell.columnIds.some(id => parameterParsingStates[id]?.parsePending ?? false) ||
+           dataTableCell.columnIds.some(id => parameterUnitParsingStates[id]?.parsePending ?? false) ||
+           nameParsingStates.some(value => value.parsePending)
            inColumnParseDebouncer;
   });
 
@@ -114,8 +150,9 @@
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     let queryCount = 0;
-    for (const [i, currentStatement] of columnStatements.entries()) {
-      const statement = $state.snapshot(currentStatement);
+    
+    for (const id of dataTableCell.columnIds) {
+      const statement = $state.snapshot(columnStatements[id]);
       if (statement) {
         if (statement.type === "query") {
           if (statement.isDataTableQuery) {
@@ -132,7 +169,6 @@
       }
     }
     if (queryCount === 0) {
-      // no queries, need placeholder statement
       statements.push(getBlankStatement());
     }
     interpolationFunctions.push(...dataTableCell.interpolationFunctions.filter(value => value !== undefined));
@@ -162,11 +198,8 @@
 
   export async function getMarkdown(centerEquations: boolean) {
     const rows = await getSheetRows(true, columnFormatOptions);
-    
     const colDef = Array(rows[0].length).fill(':----');
-
     const table = [rows[0], colDef, ...rows.slice(1)];
-
     return table.map(row => '|' + row.join('|') + '|').join('\n') + '\n\n';
   }
 
@@ -192,20 +225,12 @@
 
   async function addRow() {
     dataTableCell.addRow();
-
     await tick();
     triggerSaveNeeded();
   }
 
   function addColumn() {
     dataTableCell.addColumn();
-
-    parameterUnitParsingStates = [...parameterUnitParsingStates, getInitialParsingState()];
-    parameterParsingStates = [...parameterParsingStates, getInitialParsingState()];
-
-    columnStatements = [...columnStatements, null];
-    parserIds = [...parserIds, appState.nextParserId++];
-
     triggerSaveNeeded();
     appState.resultsInvalid = true;
     mathCellChanged();
@@ -214,39 +239,22 @@
   async function deleteRow(rowIndex: number) {
     triggerSaveNeeded(true);
     appState.resultsInvalid = true;
-
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
       await debounceParseColumn(dataTableCell.columnIds[i]);
     }
-
     mathCellChanged();
   }
 
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
-
     triggerSaveNeeded();
   }
 
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
-
     dataTableCell.deleteColumn(colIndex);
-
-    parameterUnitParsingStates = [...parameterUnitParsingStates.slice(0,colIndex),
-                                  ...parameterUnitParsingStates.slice(colIndex+1)];
-
-    parameterParsingStates = [...parameterParsingStates.slice(0,colIndex),
-                              ...parameterParsingStates.slice(colIndex+1)];
-
-    columnStatements = [...columnStatements.slice(0,colIndex),
-                        ...columnStatements.slice(colIndex+1)];
-
-    parserIds = [...parserIds.slice(0,colIndex),
-                 ...parserIds.slice(colIndex+1)];
-
     appState.resultsInvalid = true;
     mathCellChanged();
   }
@@ -271,31 +279,32 @@
 
   async function parseParameterField(column: number, topLevel = true) {
     const startingIdSet = new Set(dataTableCell.columnIdentifiers);
+    const id = dataTableCell.columnIds[column];
     
-    columnStatements[column] = null;
+    columnStatements[id] = null;
 
-    if (!parameterParsingStates[column].parsingError) {
+    if (!parameterParsingStates[id].parsingError) {
       dataTableCell.columnErrors[column] = "";
       
       let newId = null;
 
-      if (parameterParsingStates[column].statement?.type === "parameter") {
+      if (parameterParsingStates[id].statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
-        newId = parameterParsingStates[column].statement.name;
-        await debounceParseColumn(dataTableCell.columnIds[column]);
+        newId = parameterParsingStates[id].statement.name;
+        await debounceParseColumn(id);
       } else {
         dataTableCell.columnIsOutput[column] = true;
-        if ("assignment" in parameterParsingStates[column].statement && parameterParsingStates[column].statement.assignment) {
-          newId = parameterParsingStates[column].statement.assignment.name;
+        if ("assignment" in parameterParsingStates[id].statement && parameterParsingStates[id].statement.assignment) {
+          newId = parameterParsingStates[id].statement.assignment.name;
         }
-        columnStatements[column] = (parameterParsingStates[column].statement as QueryStatement);
+        columnStatements[id] = (parameterParsingStates[id].statement as QueryStatement);
       }
 
       if (dataTableCell.columnIdentifiers[column] !== newId) {
         dataTableCell.columnIdentifiers[column] = newId;
       }
     } else {
-      dataTableCell.columnErrors[column] = parameterParsingStates[column].parsingErrorMessage;
+      dataTableCell.columnErrors[column] = parameterParsingStates[id].parsingErrorMessage;
       dataTableCell.columnIsOutput[column] = false;
     }
 
@@ -306,7 +315,6 @@
     if (!dataTableCell.columnIsOutput[column]) {
       await debounceParseColumn(dataTableCell.columnIds[column]);
     }
-
     appState.resultsInvalid = true;
   }
 
@@ -345,7 +353,7 @@
       return;
     }
 
-    const statement = columnStatements[colNum];
+    const statement = columnStatements[colId];
     if (!statement) {
       dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
       return;
@@ -438,8 +446,6 @@
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
 
-    nameParsingStates.push(getInitialParsingState());
-    
     appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
     mathCellChanged();
@@ -447,34 +453,27 @@
 
   async function parseInterpolationDefNameField(column: number) {
     triggerSaveNeeded(true);
-
     setInterpolationFunctions();
-
     appState.resultsInvalid = true;
     mathCellChanged();
   }
 
   function handleInputOutputChange(defIndex: number) {
     setInterpolationFunctions();
-
     appState.cells[index] = appState.cells[index];
-    
     triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handlePolyOrderChange(defIndex: number) {
     setInterpolationFunctions();
-
     triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handleNumInputsChange(defIndex: number) {
     setInterpolationFunctions();
-
     appState.cells[index] = appState.cells[index];
-
     triggerSaveNeeded();
     mathCellChanged();
   }
@@ -482,9 +481,7 @@
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
     nameParsingStates = [...nameParsingStates.slice(0,defIndex), ...nameParsingStates.slice(defIndex+1)];
-
     setInterpolationFunctions();
-
     triggerSaveNeeded();
     mathCellChanged();
   }
@@ -579,7 +576,6 @@
       return;
     }
 
-    // Assign a unique run ID for this parse attempt
     const runId = (columnParseRuns.get(columnId) || 0) + 1;
     columnParseRuns.set(columnId, runId);
 
@@ -590,21 +586,21 @@
       endIndex = undefined;
     }
     let columnValues = dataTableCell.columnData[column].slice(0, endIndex);
+    
     if (columnValues.length > 0 && 
-        parameterUnitParsingStates[column].statement && 
-        parameterUnitParsingStates[column].statement.type !== "error") {
+        parameterUnitParsingStates[columnId]?.statement && 
+        parameterUnitParsingStates[columnId]?.statement.type !== "error") {
 
       let combinedLatex: string;
 
-      if (parameterUnitParsingStates[column].statement.type === "blank" || 
-        !arraysEqual([0,0,0,0,1,0,0,0,0], (parameterUnitParsingStates[column].statement as UnitsStatement).dimensions)) {
+      if (parameterUnitParsingStates[columnId].statement.type === "blank" || 
+        !arraysEqual([0,0,0,0,1,0,0,0,0], (parameterUnitParsingStates[columnId].statement as UnitsStatement).dimensions)) {
         combinedLatex = String.raw`${dataTableCell.parameterLatexs[column]} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
         
-        if (parameterUnitParsingStates[column].statement.type !== "blank" ) {
+        if (parameterUnitParsingStates[columnId].statement.type !== "blank" ) {
           combinedLatex += String.raw` \cdot 1 ${dataTableCell.parameterUnitLatexs[column]}`;
         }
       } else {
-        // special handling of a pure temperature unit since scaling approach won't work
         columnValues = columnValues.map((value) => `${value} ${dataTableCell.parameterUnitLatexs[column]}`);
         combinedLatex = String.raw`${dataTableCell.parameterLatexs[column]} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
       }
@@ -615,17 +611,15 @@
       columnParsePendingCount++;
       let parsingResult;
       try {
-        parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[column], 'data_table_assign');
+        parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[columnId], 'data_table_assign');
       } finally {
         columnParsePendingCount--;
       }
 
-      // Abort if a newer parse call started processing for this columnId while we were awaiting
       if (columnParseRuns.get(columnId) !== runId) {
         return; 
       }
 
-      // column location could of changed during parse
       if (!dataTableCell.columnIdLocationMap.has(columnId)) {
         return;
       }
@@ -634,15 +628,15 @@
       statement = parsingResult.statement;
       parsingError = parsingResult.parsingError;
 
-      columnStatements[column] = statement;
+      columnStatements[columnId] = statement;
       mathCellChanged();
 
       if (parsingError) {
         dataTableCell.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
-        columnStatements[column] = null;
+        columnStatements[columnId] = null;
       }
     } else {
-      columnStatements[column] = null;
+      columnStatements[columnId] = null;
       mathCellChanged();
     }
 
@@ -653,7 +647,6 @@
 
   function setInterpolationFunctions() {
     dataTableCell.interpolationFunctions = [];
-
     dataTableCell.fixInterpolationCols();
 
     definitionLoop: for(const [defIndex, def] of dataTableCell.interpolationDefinitions.entries()) {
@@ -684,9 +677,12 @@
 
       const inputUnitsList: Statement[] = [];
       for (const input of def.inputs) {
-        inputUnitsList.push(parameterUnitParsingStates[input].statement);
+        const inputId = dataTableCell.columnIds[input];
+        inputUnitsList.push(parameterUnitParsingStates[inputId]?.statement);
       }
-      let outputUnits: Statement = parameterUnitParsingStates[def.output].statement;
+      
+      const outputId = dataTableCell.columnIds[def.output];
+      let outputUnits: Statement = parameterUnitParsingStates[outputId]?.statement;
 
       for (const [i, inputUnits] of inputUnitsList.entries()) {
         if (inputUnits?.type === "blank") {
@@ -827,7 +823,6 @@
 
   async function exportAsCSV(name: string) {
     const workbook = DataTableCell.XLSX.utils.book_new();
-
     const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await getSheetRows());
     DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
@@ -839,7 +834,6 @@
 
   function selectAndLoadSpreadsheetFile(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // no File System Access API, fall back to using input element
       const input = document.createElement("input");
       input.type = "file";
       input.accept = DataTableCell.spreadsheetExtensions;
@@ -911,7 +905,6 @@
     let dataRows: string[][];
 
     if (inputRows[0].some(value => value !== undefined && isNaN(Number(value)))) {
-      // parameter names in first row
       parameterNamesRow = inputRows[0].map(value => String(value ?? ""));
 
       if (inputRows.length < 2) {
@@ -933,10 +926,8 @@
     } else {
       // first row is numeric, need to add column parameter names
       dataRows = inputRows;
-
       parameterNamesRow = Array(longestRow).fill(0).map((value, j) => excelColName(j));
       unitsRow = Array(longestRow).fill('');
-
       if (hasDescriptions) {
         descriptions.unshift(descriptionsHeader);
         descriptionsHeader = 'Row Labels';
@@ -974,9 +965,7 @@
           units = `[${units}]`;
         }
       }
-
       dataTableCell.parameterUnitLatexs.push(units);
-
       dataTableCell.columnData.push(Array(numRows).fill(''));
     }
 
@@ -991,7 +980,6 @@
     dataTableCell.columnErrors = Array(dataTableCell.columnData.length).fill('');
     dataTableCell.columnOutputUnits = Array(dataTableCell.columnData.length).fill('');
     dataTableCell.columnIsOutput = Array(dataTableCell.columnData.length).fill(false);
-
     dataTableCell.interpolationDefinitions = [];
     dataTableCell.interpolationFunctions = [];
 
@@ -1012,10 +1000,10 @@
       dataTableCell.descriptions = Array(numRows).fill('');
     }
 
-    parameterParsingStates= Array.from({ length: dataTableCell.columnData.length }, () => getInitialParsingState());
-    parameterUnitParsingStates = Array.from({ length: dataTableCell.columnData.length }, () => getInitialParsingState());
-    parserIds = Array.from({ length: dataTableCell.columnData.length }, () => appState.nextParserId++);
-    columnStatements = Array(dataTableCell.columnData.length).fill(null);
+    parameterParsingStates = Object.fromEntries(dataTableCell.columnIds.map(id => [id, getInitialParsingState()]));
+    parameterUnitParsingStates = Object.fromEntries(dataTableCell.columnIds.map(id => [id, getInitialParsingState()]));
+    parserIds = Object.fromEntries(dataTableCell.columnIds.map(id => [id, appState.nextParserId++]));
+    columnStatements = Object.fromEntries(dataTableCell.columnIds.map(id => [id, null]));
     nameParsingStates = [];
   }
 
@@ -1185,8 +1173,9 @@
   >
     {copyButtonText}
   </TextButton>
+  
   {#if numInputs >= 2}
-    <TextButton 
+    <TextButton
       onclick={() => handleAddInterpolationFunction('interpolation')}
     >
       Add Interpolation
@@ -1196,12 +1185,12 @@
     >
       Add Polyfit
     </TextButton>
-    {/if}
-    <TextButton
-      onclick={convertToSelectorTable}
-    >
-      Convert to Selector Table
-    </TextButton>
+  {/if}
+  <TextButton
+    onclick={convertToSelectorTable}
+  >
+    Convert to Selector Table
+  </TextButton>
 </div>
 
 <div
@@ -1225,6 +1214,7 @@
     {/if}
 
     {#each dataTableCell.parameterLatexs as latex, j (dataTableCell.columnIds[j])}
+      {@const colId = dataTableCell.columnIds[j]}
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
@@ -1235,17 +1225,17 @@
           type="data_table_expression"
           bind:latex={dataTableCell.parameterLatexs[j]}
           update={() => parseParameterField(j)}
-          bind:parsingState={parameterParsingStates[j]}
+          bind:parsingState={parameterParsingStates[colId]}
           dataTableInfo={{
             colVars,
             cellNum: j,
-            colId: dataTableCell.columnIds[j]
+            colId: colId
           }}
         />
-        {#if parameterParsingStates[j].parsingError}
-          {#if !parameterParsingStates[j].parsePending}
+        {#if parameterParsingStates[colId]?.parsingError}
+          {#if !parameterParsingStates[colId]?.parsePending}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{parameterParsingStates[j].parsingErrorMessage}</span>
+              <span slot="tooltipText">{parameterParsingStates[colId].parsingErrorMessage}</span>
               <ErrorIcon class="error"/>
             </TooltipIcon>
           {/if}
@@ -1278,6 +1268,7 @@
     {/if}
 
     {#each dataTableCell.parameterUnitLatexs as latex, j (dataTableCell.columnIds[j])}
+      {@const colId = dataTableCell.columnIds[j]}
       <div
         class="item math-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
@@ -1305,13 +1296,13 @@
             type="units"
             bind:latex={dataTableCell.parameterUnitLatexs[j]}
             update={() => parseUnitField(j)}
-            bind:parsingState={parameterUnitParsingStates[j]}
+            bind:parsingState={parameterUnitParsingStates[colId]}
           />
           
-          {#if parameterUnitParsingStates[j].parsingError }
-            {#if !parameterUnitParsingStates[j].parsePending}
+          {#if parameterUnitParsingStates[colId]?.parsingError }
+            {#if !parameterUnitParsingStates[colId]?.parsePending}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{parameterUnitParsingStates[j].parsingErrorMessage}</span>
+                <span slot="tooltipText">{parameterUnitParsingStates[colId].parsingErrorMessage}</span>
                 <ErrorIcon class="error"/>
               </TooltipIcon>
             {/if}
@@ -1346,7 +1337,7 @@
                 {def.type === "polyfit" ? "Polyfit Function Name:" : "Interpolation Function Name:"}
               </label>
               <div
-                id={`interpolation-name-${index}-${i}`} 
+                id={`interpolation-name-${index}-${i}`}
                 class="horizontal"
               >
                 <MathField
@@ -1357,8 +1348,8 @@
                   bind:parsingState={nameParsingStates[i]}
                   bind:this={nameLatexElement[i]}
                 />
-                {#if nameParsingStates[i].parsingError}
-                  {#if !nameParsingStates[i].parsePending}
+                {#if nameParsingStates[i]?.parsingError}
+                  {#if !nameParsingStates[i]?.parsePending}
                     <TooltipIcon direction="right" align="end">
                       <span slot="tooltipText">{nameParsingStates[i].parsingErrorMessage}</span>
                       <ErrorIcon class="error"/>
@@ -1439,7 +1430,7 @@
           {/if}
         </div>
       {/each}
-      <div 
+      <div
         class="buttons"
         style="grid-column: {numColumns + 1 + descOffset}; grid-row: {i+3};"
       >
@@ -1451,13 +1442,11 @@
           <RowDelete />
         </IconButton>
       </div>
-
     {/each}
   {/if}
 
   {#if dataTableCell.columnData}
     {#each Array(numRows) as _, i }
-
       {#if dataTableCell.showDescriptions}
         <div
           class="item data-field"
@@ -1509,7 +1498,6 @@
     {/each}
   {/if}
 
-
   {#if numColumns > 1}
     {#each Array(numColumns) as _, j}
       <div 
@@ -1544,9 +1532,8 @@
     {/each}
   {/if}
 
-
   <div class="buttons align-start" style="grid-column:{numColumns + 1 + descOffset}; grid-row:1">
-    <IconButton 
+    <IconButton
       id={`add-col-${index}`}
       click={addColumn}
       title="Add Column"
@@ -1578,4 +1565,3 @@
   {/if}
 
 </div>
-
