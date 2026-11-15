@@ -54,11 +54,6 @@ export default class DataTableCell extends BaseCell {
   columnData: string[][] = $state();
   columnIds: number[] = $state();
   columnFormatOptions: (NumberFormatOptions | null)[] = $state();
-  columnIdLocationMap: Map<number, number>;
-  columnIdentifiers: (string | null)[] = $state();
-  columnErrors: string[] = $state();
-  columnIsOutput: boolean[] = $state();
-  columnOutputUnits: string[] = $state();
   showDescriptions: boolean = $state();
   descriptionsHeader: string = $state();
   descriptions: string[] = $state();
@@ -66,7 +61,7 @@ export default class DataTableCell extends BaseCell {
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
-  constructor (arg?: DatabaseDataTableCell) {
+constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
     if (arg === undefined) {
       this.parameterLatexs = [DataTableCell.getNextColName(), DataTableCell.getNextColName()];
@@ -74,10 +69,6 @@ export default class DataTableCell extends BaseCell {
       this.columnData = [['', ''], ['', '']];
       this.columnIds = [this.getNextColId(), this.getNextColId()];
       this.columnFormatOptions = [null, null];
-      this.columnIdentifiers = [null, null];
-      this.columnErrors = ['', ''];
-      this.columnOutputUnits = ['', ''];
-      this.columnIsOutput = [false, false];
       this.interpolationDefinitions = [];
       this.interpolationFunctions = [];
       this.showDescriptions = false;
@@ -95,10 +86,11 @@ export default class DataTableCell extends BaseCell {
         DataTableCell.nextPolyfitDefId = arg.nextPolyfitDefId;
       }
       this.parameterUnitLatexs = [...arg.parameterUnitLatexs];
-      this.columnData = arg.columnData;
+      
+      this.columnData = arg.columnData.map(col => [...col]);
 
       if (arg.columnIds) {
-        this.columnIds = arg.columnIds;
+        this.columnIds = [...arg.columnIds];
       } else {
         // old versions of the file won't have this property, number them sequentially to match any results in the file
         this.columnIds = [];
@@ -108,15 +100,11 @@ export default class DataTableCell extends BaseCell {
       }
 
       if (arg.columnFormatOptions) {
-        this.columnFormatOptions = arg.columnFormatOptions;
+        this.columnFormatOptions = [...arg.columnFormatOptions];
       } else {
         this.columnFormatOptions = Array(this.columnData.length).fill(null);
       }
 
-      this.columnIdentifiers = Array(this.columnData.length).fill(null);
-      this.columnErrors = Array(this.columnData.length).fill('');
-      this.columnOutputUnits = Array(this.columnData.length).fill('');
-      this.columnIsOutput = Array(this.columnData.length).fill(false);
 
       this.interpolationDefinitions = [];
       for (const definition of arg.interpolationDefinitions) {
@@ -124,7 +112,7 @@ export default class DataTableCell extends BaseCell {
           this.interpolationDefinitions.push({
             nameLatex: definition.nameLatex,
             numInputs: definition.numInputs,
-            inputs: definition.inputs,
+            inputs: [...definition.inputs],
             output: definition.output,
             type: definition.type,
             order: definition.order
@@ -133,7 +121,7 @@ export default class DataTableCell extends BaseCell {
           this.interpolationDefinitions.push({
             nameLatex: definition.nameLatex,
             numInputs: 1,
-            inputs: [definition.input,],
+            inputs: [definition.input],
             output: definition.output,
             type: definition.type,
             order: definition.order
@@ -142,21 +130,15 @@ export default class DataTableCell extends BaseCell {
       }
       this.interpolationFunctions = [];
 
-      // descriptions column needs to be added if it wasn't in the original data
       if (arg.descriptions) {
         this.showDescriptions = arg.showDescriptions;
         this.descriptionsHeader = arg.descriptionsHeader;
-        this.descriptions = arg.descriptions;
+        this.descriptions = [...arg.descriptions];
       } else {
         this.showDescriptions = false;
         this.descriptionsHeader = "Row Labels";
         this.descriptions = Array(this.columnData[0].length).fill('');
       }
-    }
-
-    this.columnIdLocationMap = new Map();
-    for (const [i, id] of this.columnIds.entries()) {
-      this.columnIdLocationMap.set(id, i);
     }
   }
 
@@ -179,11 +161,14 @@ export default class DataTableCell extends BaseCell {
     return this.nextColumnId++;
   }
 
-  serialize(includedComputedUnits = false): DatabaseDataTableCell {
+serialize(columnIsOutput?: Record<number,boolean>, columnOutputUnits?: Record<number,string>): DatabaseDataTableCell {
     let newParameterUnitLatexs: string[];
     
-    if (includedComputedUnits) {
-      newParameterUnitLatexs = this.parameterUnitLatexs.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter);
+    if (columnIsOutput && columnOutputUnits) {
+      newParameterUnitLatexs = [];
+      for (const [loc, id] of this.columnIds.entries()) {
+        newParameterUnitLatexs.push(columnIsOutput[id] ? columnOutputUnits[id] : this.parameterUnitLatexs[loc])
+      }
     } else {
       newParameterUnitLatexs = this.parameterUnitLatexs;
     }
@@ -191,26 +176,26 @@ export default class DataTableCell extends BaseCell {
     return {
       type: "dataTable",
       id: this.id,
-      parameterLatexs: this.parameterLatexs,
+      parameterLatexs: $state.snapshot(this.parameterLatexs),
       nextParameterId: DataTableCell.nextParameterId,
       nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
       nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
-      parameterUnitLatexs: newParameterUnitLatexs,
-      columnData: this.columnData,
-      columnIds: this.columnIds,
-      columnFormatOptions: this.columnFormatOptions,
+      parameterUnitLatexs: $state.snapshot(newParameterUnitLatexs),
+      columnData: $state.snapshot(this.columnData),
+      columnIds: $state.snapshot(this.columnIds),
+      columnFormatOptions: $state.snapshot(this.columnFormatOptions),
       showDescriptions: this.showDescriptions,
       descriptionsHeader: this.descriptionsHeader,
-      descriptions: this.descriptions,
+      descriptions: $state.snapshot(this.descriptions),
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
-            nameLatex: definition.nameLatex,
-            type: definition.type,
-            numInputs: definition.numInputs,
-            inputs: definition.inputs,
-            output: definition.output,
-            order: definition.order
-          }
-        }),
+          nameLatex: definition.nameLatex,
+          type: definition.type,
+          numInputs: definition.numInputs,
+          inputs: definition.inputs,
+          output: definition.output,
+          order: definition.order
+        }
+      }),
     };
   }
 
@@ -239,18 +224,12 @@ export default class DataTableCell extends BaseCell {
     const newId = this.getNextColId();
     this.columnIds = [...this.columnIds, newId];
     this.columnFormatOptions = [...this.columnFormatOptions, null];
-    this.columnIdLocationMap.set(newId, this.columnIds.length - 1);
 
     this.parameterUnitLatexs = [...this.parameterUnitLatexs, ''];
     
     this.parameterLatexs = [...this.parameterLatexs, newVarName];
 
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
-
-    this.columnIdentifiers = [...this.columnIdentifiers, null];
-    this.columnErrors = [...this.columnErrors, ''];
-    this.columnOutputUnits = [...this.columnOutputUnits, ''];
-    this.columnIsOutput = [...this.columnIsOutput, false];
   }
 
   deleteRow(rowIndex: number) {
@@ -267,10 +246,6 @@ export default class DataTableCell extends BaseCell {
     this.columnFormatOptions = [...this.columnFormatOptions.slice(0,colIndex),
                                 ...this.columnFormatOptions.slice(colIndex+1)];
 
-    this.columnIdLocationMap = new Map();
-    for (const [i, id] of this.columnIds.entries()) {
-      this.columnIdLocationMap.set(id, i);
-    }
 
     this.parameterUnitLatexs = [...this.parameterUnitLatexs.slice(0,colIndex),
                                 ...this.parameterUnitLatexs.slice(colIndex+1)];
@@ -280,18 +255,6 @@ export default class DataTableCell extends BaseCell {
 
     this.columnData = [...this.columnData.slice(0,colIndex),
                        ...this.columnData.slice(colIndex+1)];
-
-    this.columnIdentifiers = [...this.columnIdentifiers.slice(0,colIndex),
-                              ...this.columnIdentifiers.slice(colIndex+1)];
-
-    this.columnErrors = [...this.columnErrors.slice(0,colIndex),
-                         ...this.columnErrors.slice(colIndex+1)];
-
-    this.columnOutputUnits = [...this.columnOutputUnits.slice(0,colIndex),
-                              ...this.columnOutputUnits.slice(colIndex+1)];
-
-    this.columnIsOutput = [...this.columnIsOutput.slice(0,colIndex),
-                           ...this.columnIsOutput.slice(colIndex+1)];
   }
 
   padColumns() {
@@ -334,14 +297,6 @@ export default class DataTableCell extends BaseCell {
     }
   }
 
-  clearOutputColumns() {
-    for (const [i, column] of this.columnData.entries()) {
-      if (this.columnIsOutput[i]) {
-        column.fill('');
-      }
-    }
-  }
-
   addInterpolationDefinition(type: "polyfit" | "interpolation", input: number, output: number) {
     let functionName: string;
     if (type === "polyfit") {
@@ -362,50 +317,6 @@ export default class DataTableCell extends BaseCell {
 
   deleteInterpolationDefinition(index: number) {
     this.interpolationDefinitions = [...this.interpolationDefinitions.slice(0,index), ...this.interpolationDefinitions.slice(index+1)];
-  }
-
-  fixInterpolationCols() {
-    const dataCols = new Set(this.columnIsOutput.map((value, i) => value ? -1 : i).filter(value => value >= 0));
-    if (dataCols.size < 2) {
-      // not enough cols to perform interpolation
-      this.interpolationDefinitions = [];
-      return;
-    }
-
-    for (const def of this.interpolationDefinitions) {
-      if (dataCols.size < def.numInputs + 1) {
-        def.numInputs = dataCols.size - 1;
-      }
-
-      def.inputs.length = def.numInputs;
-
-      for (const [i, inputCol] of def.inputs.entries()) {
-        let valid = true;
-        if (def.inputs.slice(0,i).includes(inputCol)) {
-          valid = false;
-        } else if (!dataCols.has(inputCol)) {
-          valid = false;
-        }
-
-        if (!valid) {
-          for (const dataCol of dataCols) {
-            if (!def.inputs.slice(0,i).includes(dataCol)) {
-              def.inputs[i] = dataCol;
-              break;
-            }
-          }
-        }
-      }
-
-      if (!dataCols.has(def.output) || def.inputs.includes(def.output)) {
-        for (const dataCol of dataCols) {
-          if (!(def.inputs.includes(dataCol))) {
-            def.output = dataCol;
-            break;
-          }
-        }
-      }
-    }
   }
 }
 

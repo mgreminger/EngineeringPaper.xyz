@@ -41,6 +41,7 @@
   import { getBlankStatement, getInitialParsingState, type ParsingState } from "./parser/utility";
   import type { NumberFormatOptions } from "./sheet/Sheet";
   import { convertLatexToAsciiMath } from "mathlive";
+  import { SvelteMap } from "svelte/reactivity";
 
   interface Props {
     index: number;
@@ -59,7 +60,38 @@
   let numColumns = $derived(dataTableCell.columnData.length);
   let numRows = $derived(dataTableCell.columnData[0].length);
   let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
-  let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
+
+  let columnIdLocationMap = $derived.by(() => {
+      const map = new SvelteMap<number, number>();
+      if (dataTableCell.columnIds) {
+        for (const [i, id] of dataTableCell.columnIds.entries()) {
+          map.set(id, i);
+        }
+      }
+      return map;
+    });
+
+  let columnIdentifiers: Record<number, string | null> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, null]))
+  );
+
+  let columnErrors: Record<number, string | null> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, '']))
+  );
+
+  let columnOutputUnits: Record<number, string> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, '']))
+  );
+
+  let columnIsOutput: Record<number, boolean> = $state(
+    // svelte-ignore state_referenced_locally
+    Object.fromEntries(dataTableCell.columnIds.map(id => [id, false]))
+  );
+
+  let numInputs = $derived(dataTableCell.columnIds.filter(id => !columnIsOutput[id]).length);
   let result = $derived(appState.results[index]);
   let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.formatOptions : value));
   let containerDiv: HTMLDivElement;
@@ -69,7 +101,7 @@
 
   let colVars = $state<string[]>([]);
   $effect(() => {
-    const nextColVars = dataTableCell.columnIdentifiers.filter((id) => id !== null);
+    const nextColVars = dataTableCell.columnIds.map((id) => columnIdentifiers[id]).filter(value => value !== null);
     if (!arraysEqual(colVars, nextColVars)) {
       colVars = nextColVars;
     }
@@ -117,6 +149,18 @@
       }
       if (columnStatements[id] === undefined) {
         columnStatements[id] = null;
+      }
+      if (columnIdentifiers[id] === undefined) {
+        columnIdentifiers[id] = null;
+      }
+      if (columnErrors[id] === undefined) {
+        columnErrors[id] = "";
+      }
+      if (columnOutputUnits[id] === undefined) {
+        columnOutputUnits[id] = "";
+      }
+      if (columnIsOutput[id] === undefined) {
+        columnIsOutput[id] = false;
       }
     }
     
@@ -269,7 +313,7 @@
         descElement.focus();
       }
     } else {
-      const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+      const firstInputColumn = dataTableCell.columnIds.map(id => columnIsOutput[id]).findIndex(isOutput => !isOutput);
       const fieldElement = document.querySelector(`#data-table-input-${index}-${row+1}-${firstInputColumn}`) as HTMLDivElement | null;
       if (fieldElement) {
         fieldElement.focus();
@@ -278,51 +322,51 @@
   }
 
   async function parseParameterField(column: number, topLevel = true) {
-    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     const id = dataTableCell.columnIds[column];
     
     columnStatements[id] = null;
 
     if (!parameterParsingStates[id].parsingError) {
-      dataTableCell.columnErrors[column] = "";
+      columnErrors[id] = "";
       
       let newId = null;
 
       if (parameterParsingStates[id].statement?.type === "parameter") {
-        dataTableCell.columnIsOutput[column] = false;
+        columnIsOutput[id] = false;
         newId = parameterParsingStates[id].statement.name;
         await debounceParseColumn(id);
       } else {
-        dataTableCell.columnIsOutput[column] = true;
+        columnIsOutput[id] = true;
         if ("assignment" in parameterParsingStates[id].statement && parameterParsingStates[id].statement.assignment) {
           newId = parameterParsingStates[id].statement.assignment.name;
         }
         columnStatements[id] = (parameterParsingStates[id].statement as QueryStatement);
       }
 
-      if (dataTableCell.columnIdentifiers[column] !== newId) {
-        dataTableCell.columnIdentifiers[column] = newId;
+      if (columnIdentifiers[id] !== newId) {
+        columnIdentifiers[id] = newId;
       }
     } else {
-      dataTableCell.columnErrors[column] = parameterParsingStates[id].parsingErrorMessage;
-      dataTableCell.columnIsOutput[column] = false;
+      columnErrors[id] = parameterParsingStates[id].parsingErrorMessage;
+      columnIsOutput[id] = false;
     }
 
     appState.resultsInvalid = true;
   }
 
   async function parseUnitField(column: number) {
-    if (!dataTableCell.columnIsOutput[column]) {
-      await debounceParseColumn(dataTableCell.columnIds[column]);
+    const colId = dataTableCell.columnIds[column];
+    if (!columnIsOutput[colId]) {
+      await debounceParseColumn(colId);
     }
     appState.resultsInvalid = true;
   }
 
   async function parseDataField(column: number) {
     triggerSaveNeeded(true);
-
-    if (!dataTableCell.columnIsOutput[column]) {
-      await debounceParseColumn(dataTableCell.columnIds[column]);
+    const colId = dataTableCell.columnIds[column];
+    if (!columnIsOutput[colId]) {
+      await debounceParseColumn(colId);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -335,13 +379,13 @@
   }
 
   function setColumnResult(colId: number, colResult: MatrixResult) {
-    if (!dataTableCell.columnIdLocationMap.has(colId)) {
+    if (!columnIdLocationMap.has(colId)) {
       return;
     }
-    let colNum = dataTableCell.columnIdLocationMap.get(colId);
-    dataTableCell.columnErrors[colNum] = "";
-    dataTableCell.columnOutputUnits[colNum] = "";
-    dataTableCell.columnIsOutput[colNum] = true;
+    let colNum = columnIdLocationMap.get(colId);
+    columnErrors[colId] = "";
+    columnOutputUnits[colId] = "";
+    columnIsOutput[colId] = true;
     
     const currentCol = dataTableCell.columnData[colNum];
     currentCol.fill('');
@@ -349,18 +393,18 @@
     let newColData: number[] = [];
 
     if (colResult.results[0].length !== 1) {
-      dataTableCell.columnErrors[colNum] = "Only column vectors can be placed in a data table";
+      columnErrors[colId] = "Only column vectors can be placed in a data table";
       return;
     }
 
     const statement = columnStatements[colId];
     if (!statement) {
-      dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
+      columnErrors[colId] = "Parsing Error (mismatch between expression and result)";
       return;
     }
 
     if (statement.type !== "query"){
-      dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
+      columnErrors[colId] = "Parsing Error (mismatch between expression and result)";
       return;
     }
 
@@ -373,10 +417,10 @@
     for (const [i, resultRow] of colResult.results.entries()) {
       for (const [j, result] of resultRow.entries()) {
         if (isFiniteImagResult(result)) {
-          dataTableCell.columnErrors[colNum] = "Some results evaluate to an imaginary number, which cannot be displayed in a data table";
+          columnErrors[colId] = "Some results evaluate to an imaginary number, which cannot be displayed in a data table";
           return;
         } else if (!(result.numeric && result.finite)) {
-          dataTableCell.columnErrors[colNum] = "Some results do not evaluate to a finite real value, which cannot be displayed in a data table";
+          columnErrors[colId] = "Some results do not evaluate to a finite real value, which cannot be displayed in a data table";
           return;
         } else {
           if (i === 0 && j === 0) {
@@ -391,12 +435,12 @@
     }
 
     if (resultUnitSet.size > 1) {
-      dataTableCell.columnErrors[colNum] = "All entries in the column vector must have the same units";
+      columnErrors[colId] = "All entries in the column vector must have the same units";
       return;
     }
 
     if (!unitsValid(firstResult.units)) {
-      dataTableCell.columnErrors[colNum] = "Dimension Error";
+      columnErrors[colId] = "Dimension Error";
       return;
     }
 
@@ -414,7 +458,7 @@
       if (unitsEquivalent(resultUnits, startingUnits)) {
         newColData = convertArrayUnits(newColData, startingUnits, resultUnits);
       } else {
-        dataTableCell.columnErrors[colNum] = "Units Mismatch";
+        columnErrors[colId] = "Units Mismatch";
         return;
       } 
     }
@@ -423,7 +467,7 @@
       currentCol[i] = String(value);
     }
 
-    dataTableCell.columnOutputUnits[colNum] = resultUnitsLatex;
+    columnOutputUnits[colId] = resultUnitsLatex;
 
     const paddingNeeded = dataTableCell.padColumns();
     if (paddingNeeded) {
@@ -432,18 +476,31 @@
   }
 
   function clearOutputColumns() {
-    dataTableCell.clearOutputColumns();
+    for (const [i, column] of dataTableCell.columnData.entries()) {
+      if (columnIsOutput[dataTableCell.columnIds[i]]) {
+        column.fill('');
+      }
+    }
   }
 
   function handleAddInterpolationFunction(type: "interpolation" | "polyfit") {
-    let input = dataTableCell.columnIsOutput.indexOf(false);
-    if (input === -1) {
+    let input = -1;
+    let output = -1;
+
+    for (const [loc, id] of dataTableCell.columnIds.entries()) {
+      if (!columnIsOutput[id]) {
+        if (input < 0) {
+          input = loc;
+        } else if (output < 0) {
+          output = loc;
+          break;
+        }
+      }
+    }
+    if (input === -1 || output === -1) {
       return;
     }
-    let output = dataTableCell.columnIsOutput.indexOf(false, input+1);
-    if (output === -1) {
-      return;
-    }
+
     dataTableCell.addInterpolationDefinition(type, input, output);
 
     appState.cells[index] = appState.cells[index];
@@ -524,7 +581,7 @@
 
   function convertToSelectorTable() {
     dataTableCell.padColumns();
-    dataTableToSelectorTable(index, dataTableCell.serialize(true));
+    dataTableToSelectorTable(index, dataTableCell.serialize(columnIsOutput, columnOutputUnits));
     triggerSaveNeeded();
     mathCellChanged(); 
   }
@@ -562,16 +619,16 @@
 
   
   async function parseColumn(columnId: number) {
-    if (!dataTableCell.columnIdLocationMap.has(columnId)) {
+    if (!columnIdLocationMap.has(columnId)) {
       return;
     }
-    let column = dataTableCell.columnIdLocationMap.get(columnId);
+    let column = columnIdLocationMap.get(columnId);
 
     const isInterpolationCol = dataTableCell.isInterpolationCol(column);
 
-    if (dataTableCell.columnIsOutput[column]) {
+    if (columnIsOutput[columnId]) {
       if (isInterpolationCol) {
-        dataTableCell.fixInterpolationCols();
+        fixInterpolationCols();
       }
       return;
     }
@@ -579,7 +636,7 @@
     const runId = (columnParseRuns.get(columnId) || 0) + 1;
     columnParseRuns.set(columnId, runId);
 
-    dataTableCell.columnErrors[column] = "";
+    columnErrors[columnId] = "";
 
     let endIndex = dataTableCell.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
     if (endIndex === -1) {
@@ -620,10 +677,10 @@
         return; 
       }
 
-      if (!dataTableCell.columnIdLocationMap.has(columnId)) {
+      if (!columnIdLocationMap.has(columnId)) {
         return;
       }
-      column = dataTableCell.columnIdLocationMap.get(columnId);
+      column = columnIdLocationMap.get(columnId);
 
       statement = parsingResult.statement;
       parsingError = parsingResult.parsingError;
@@ -632,7 +689,7 @@
       mathCellChanged();
 
       if (parsingError) {
-        dataTableCell.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
+        columnErrors[columnId] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
         columnStatements[columnId] = null;
       }
     } else {
@@ -647,7 +704,7 @@
 
   function setInterpolationFunctions() {
     dataTableCell.interpolationFunctions = [];
-    dataTableCell.fixInterpolationCols();
+    fixInterpolationCols();
 
     definitionLoop: for(const [defIndex, def] of dataTableCell.interpolationDefinitions.entries()) {
       if (nameParsingStates[defIndex].statement?.type !== "parameter") {
@@ -771,7 +828,7 @@
       headers.unshift(dataTableCell.descriptionsHeader);
     }
 
-    let units = dataTableCell.parameterUnitLatexs.map((field, j) => dataTableCell.columnIsOutput[j] ? dataTableCell.columnOutputUnits[j] : field);
+    let units = dataTableCell.columnIds.map((id, j) => columnIsOutput[id] ? columnOutputUnits[id] : dataTableCell.parameterUnitLatexs[j]);
     const hasUnits = !units.every(value => value.trim() === "");
 
     if (hasUnits) {
@@ -975,20 +1032,11 @@
       }
     }
 
-    dataTableCell.columnIdentifiers = Array(dataTableCell.columnData.length).fill(null);
     dataTableCell.columnFormatOptions = Array(dataTableCell.columnData.length).fill(null);
-    dataTableCell.columnErrors = Array(dataTableCell.columnData.length).fill('');
-    dataTableCell.columnOutputUnits = Array(dataTableCell.columnData.length).fill('');
-    dataTableCell.columnIsOutput = Array(dataTableCell.columnData.length).fill(false);
     dataTableCell.interpolationDefinitions = [];
     dataTableCell.interpolationFunctions = [];
 
     dataTableCell.columnIds = [];
-    dataTableCell.columnIdLocationMap = new Map();
-    for (let col = 0; col < dataTableCell.columnData.length; col++) {
-      dataTableCell.columnIds[col] = dataTableCell.getNextColId();
-      dataTableCell.columnIdLocationMap.set(dataTableCell.columnIds[col], col);
-    }
 
     if (hasDescriptions) {
       dataTableCell.showDescriptions = true;
@@ -1005,6 +1053,50 @@
     parserIds = Object.fromEntries(dataTableCell.columnIds.map(id => [id, appState.nextParserId++]));
     columnStatements = Object.fromEntries(dataTableCell.columnIds.map(id => [id, null]));
     nameParsingStates = [];
+  }
+
+  function fixInterpolationCols() {
+    const dataCols = new Set(dataTableCell.columnIds.map(id => columnIsOutput[id]).map((value, i) => value ? -1 : i).filter(value => value >= 0));
+    if (dataCols.size < 2) {
+      // not enough cols to perform interpolation
+      dataTableCell.interpolationDefinitions = [];
+      return;
+    }
+
+    for (const def of dataTableCell.interpolationDefinitions) {
+      if (dataCols.size < def.numInputs + 1) {
+        def.numInputs = dataCols.size - 1;
+      }
+
+      def.inputs.length = def.numInputs;
+
+      for (const [i, inputCol] of def.inputs.entries()) {
+        let valid = true;
+        if (def.inputs.slice(0,i).includes(inputCol)) {
+          valid = false;
+        } else if (!dataCols.has(inputCol)) {
+          valid = false;
+        }
+
+        if (!valid) {
+          for (const dataCol of dataCols) {
+            if (!def.inputs.slice(0,i).includes(dataCol)) {
+              def.inputs[i] = dataCol;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!dataCols.has(def.output) || def.inputs.includes(def.output)) {
+        for (const dataCol of dataCols) {
+          if (!(def.inputs.includes(dataCol))) {
+            def.output = dataCol;
+            break;
+          }
+        }
+      }
+    }
   }
 
   $effect( () => {
@@ -1239,9 +1331,9 @@
               <ErrorIcon class="error"/>
             </TooltipIcon>
           {/if}
-        {:else if dataTableCell.columnErrors[j]}
+        {:else if columnErrors[colId]}
           <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
+            <span slot="tooltipText">{columnErrors[colId]}</span>
             <ErrorIcon class="error"/>
           </TooltipIcon>
         {:else if j === 0}
@@ -1271,13 +1363,13 @@
       {@const colId = dataTableCell.columnIds[j]}
       <div
         class="item math-field"
-        class:calculated={dataTableCell.columnIsOutput[j]}
+        class:calculated={columnIsOutput[colId]}
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 1 + descOffset}; grid-row: 2;"
       >
-        {#if dataTableCell.columnIsOutput[j]}
+        {#if columnIsOutput[colId]}
           <MathField
-            latex={dataTableCell.columnOutputUnits[j]}
+            latex={columnOutputUnits[colId]}
           />
           <div class="settings-button">
             <IconButton
@@ -1323,7 +1415,8 @@
 
   {#if numInterpolationDefs > 0}
     {#each dataTableCell.interpolationDefinitions as def, i}
-      {#each [...Array(descOffset).fill(true), ...dataTableCell.columnIsOutput] as isOutput, j }
+      {#each [...Array(descOffset).fill(-1), ...dataTableCell.columnIds] as id, j (id)}
+        {@const isOutput = id >= 0 ? columnIsOutput[id] : true}
         <div
           class="item spread"
           style="grid-column: {j+1}; grid-row: {i+3};"
@@ -1464,13 +1557,14 @@
 
       {#each Array(numColumns) as _, j }
         {@const nonNumeric = isNaN(Number(dataTableCell.columnData[j][i]))}
+        {@const colId = dataTableCell.columnIds[j]}
         <div
           class="item data-field"
-          class:calculated={dataTableCell.columnIsOutput[j]}
+          class:calculated={columnIsOutput[colId]}
           id={`grid-cell-${index}-${i}-${j}`}
           style="grid-column: {j+1+descOffset}; grid-row: {i+numInterpolationDefs+3};"
         >
-          {#if dataTableCell.columnIsOutput[j]}
+          {#if columnIsOutput[colId]}
             {@const value = dataTableCell.columnData[j][i]}
             {#if !appState.resultsInvalid && value !== ""}
               {format(parseFloat(value), columnFormatOptions[j])}
