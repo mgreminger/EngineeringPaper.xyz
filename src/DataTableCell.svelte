@@ -281,13 +281,12 @@
   }
 
   async function deleteRow(rowIndex: number) {
-    triggerSaveNeeded(true);
     appState.resultsInvalid = true;
     dataTableCell.deleteRow(rowIndex);
-
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
       await debounceParseColumn(dataTableCell.columnIds[i]);
     }
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -297,10 +296,10 @@
   }
 
   async function deleteColumn(colIndex: number) {
-    triggerSaveNeeded(true);
     dataTableCell.deleteColumn(colIndex);
     fixInterpolationCols();
     appState.resultsInvalid = true;
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -364,7 +363,6 @@
   }
 
   async function parseDataField(column: number) {
-    triggerSaveNeeded(true);
     const colId = dataTableCell.columnIds[column];
     if (!columnIsOutput[colId]) {
       await debounceParseColumn(colId);
@@ -372,6 +370,7 @@
 
     appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -510,9 +509,9 @@
   }
 
   async function parseInterpolationDefNameField(column: number) {
-    triggerSaveNeeded(true);
     setInterpolationFunctions();
     appState.resultsInvalid = true;
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -1661,5 +1660,4 @@
       </IconButton>
     </div>
   {/if}
-
 </div>

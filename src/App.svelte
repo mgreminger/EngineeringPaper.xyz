@@ -8,7 +8,7 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState, { applySheetOjbect, debounceTime, redo, undo } from "./stores.svelte";
+  import appState, { applySheetObject, debounceTime, redo, undo } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject, clearResults,
            mathCellChanged, triggerSaveNeeded
@@ -1021,11 +1021,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
       appState.resultsInvalid = true;
       appState.activeCell = -1;
 
-      await applySheetOjbect(sheet);
+      await applySheetObject(sheet);
 
       appState.past = [];
       appState.future = [];
-      appState.lastSnapshot = sheet;
+      appState.lastSnapshot = getSheetObject(false);
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         appState.history = requestHistory;
@@ -1035,6 +1035,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // new MathField instances have their parsePending value initial set to true.
       // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
       await tick();
+
       while(appState.inDebounce || appState.parsePending || !appState.cellListElement || appState.cellListElement.getParsePending()) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);

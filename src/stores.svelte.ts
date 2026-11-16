@@ -234,19 +234,19 @@ export function handleClickInCell(index: number) {
 }
 
 export function getSheetObject(includeResults=true): Sheet {
-  return $state.snapshot({
+  return {
     version: appState.currentVersion,
-    config: appState.config,
+    config: $state.snapshot(appState.config),
     cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
     title: appState.title,
-    results: includeResults ? (appState.resultsInvalid ? [] : appState.results) : [],
-    system_results: includeResults ? appState.system_results : [],
-    codeCellResults: includeResults ? appState.codeCellResults : {},
-    sub_results: includeResults ? [...appState.sub_results.entries()] : [],
+    results: includeResults ? (appState.resultsInvalid ? [] : $state.snapshot(appState.results)) : [],
+    system_results: includeResults ? $state.snapshot(appState.system_results) : [],
+    codeCellResults: includeResults ? $state.snapshot(appState.codeCellResults) : {},
+    sub_results: includeResults ? [...$state.snapshot(appState.sub_results).entries()] : [],
     nextId: BaseCell.nextId,
     sheetId: appState.sheetId,
-    insertedSheets: appState.insertedSheets
-  });
+    insertedSheets: $state.snapshot(appState.insertedSheets)
+  };
 }
 
 export function getSheetJson() {
@@ -284,10 +284,19 @@ export async function resetSheet() {
 
   appState.past = [];
   appState.future = [];
-  appState.lastSnapshot = getSheetObject();
+  appState.lastSnapshot = getSheetObject(false);
 }
 
-export async function applySheetOjbect(sheet: Sheet) {
+let applyingSheetObject = false;
+
+export async function applySheetObject(sheet: Sheet) {
+  if (applyingSheetObject) {
+    console.warn('Already applying sheet object cannot apply another sheet object');
+    return;
+  }
+
+  applyingSheetObject = true;
+
   appState.title = sheet.title;
   BaseCell.nextId = sheet.nextId;
   appState.sheetId = sheet.sheetId;
@@ -295,7 +304,11 @@ export async function applySheetOjbect(sheet: Sheet) {
   appState.insertedSheets = sheet.insertedSheets ?? [];
   appState.config = normalizeConfig(sheet.config);
 
-  appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+  try {
+    appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+  } finally {
+    applyingSheetObject = false;
+  }
 }
 
 let applyingDiff = false;
@@ -309,7 +322,7 @@ export function storeUndoDiff() {
   if (!appState.lastSnapshot) {
     return;
   }
-  const currentSnapshot = getSheetObject();
+  const currentSnapshot = getSheetObject(false);
 
   const changeset = diff(appState.lastSnapshot, currentSnapshot, {
     embeddedObjKeys: {
@@ -319,6 +332,7 @@ export function storeUndoDiff() {
 
   if (changeset.length > 0) {
     appState.past.push(changeset);
+    console.log(`appState.past.length=${appState.past.length}`);
     appState.future = []; 
     appState.lastSnapshot = currentSnapshot;
   }
@@ -335,17 +349,19 @@ export async function undo() {
     const changeset = appState.past.pop()!;
     appState.future.push(changeset);
 
-    let currentState = getSheetObject();
+    let currentState = getSheetObject(false);
     currentState = revertChangeset(currentState, changeset);
     
     // This will trigger Svelte's reactivity, but storeUndoDiff will abort
-    await applySheetOjbect(currentState);
+    await applySheetObject(currentState);
     await tick();
 
     appState.lastSnapshot = currentState;
   } finally {
     applyingDiff = false; // 2. Unlock the tracker safely
   }
+
+  console.log('undid!')
 }
 
 export async function redo() {
@@ -359,17 +375,19 @@ export async function redo() {
     const changeset = appState.future.pop()!;
     appState.past.push(changeset);
 
-    let currentState = getSheetObject();
+    let currentState = getSheetObject(false);
     currentState = applyChangeset(currentState, changeset);
     
     // This will trigger Svelte's reactivity, but storeUndoDiff will abort
-    await applySheetOjbect(currentState);
+    await applySheetObject(currentState);
     await tick();
 
     appState.lastSnapshot = currentState;
   } finally {
     applyingDiff = false; // 2. Unlock the tracker safely
   }
+
+  console.log('redid');
 }
 
 export function incrementActiveCell() {
