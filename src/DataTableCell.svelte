@@ -283,10 +283,10 @@
   async function deleteRow(rowIndex: number) {
     appState.resultsInvalid = true;
     dataTableCell.deleteRow(rowIndex);
+    triggerSaveNeeded(true);
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
       await debounceParseColumn(dataTableCell.columnIds[i]);
     }
-    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -363,14 +363,14 @@
   }
 
   async function parseDataField(column: number) {
+    triggerSaveNeeded(true);
+
     const colId = dataTableCell.columnIds[column];
     if (!columnIsOutput[colId]) {
       await debounceParseColumn(colId);
     }
 
-    appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
-    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
@@ -517,7 +517,6 @@
 
   function handleInputOutputChange(defIndex: number) {
     setInterpolationFunctions();
-    appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
     mathCellChanged();
   }
@@ -530,7 +529,6 @@
 
   function handleNumInputsChange(defIndex: number) {
     setInterpolationFunctions();
-    appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
     mathCellChanged();
   }
@@ -548,8 +546,6 @@
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}}});
       await selectAndLoadSpreadsheetFile();
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
-
-      appState.cells[index] = appState.cells[index];
       
       triggerSaveNeeded();
       mathCellChanged();
