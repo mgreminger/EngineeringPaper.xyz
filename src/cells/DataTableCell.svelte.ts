@@ -191,7 +191,7 @@ serialize(columnIsOutput?: Record<number,boolean>, columnOutputUnits?: Record<nu
           nameLatex: definition.nameLatex,
           type: definition.type,
           numInputs: definition.numInputs,
-          inputs: definition.inputs,
+          inputs: $state.snapshot(definition.inputs),
           output: definition.output,
           order: definition.order
         }
