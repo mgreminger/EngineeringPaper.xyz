@@ -8,7 +8,7 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState, { applySheetObject, debounceTime, redo, undo } from "./stores.svelte";
+  import appState, { applySheetObject, debounceTime, redo, resetSheetUndoHistory, undo } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject, clearResults,
            mathCellChanged, triggerSaveNeeded
@@ -1023,9 +1023,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await applySheetObject(sheet);
 
-      appState.past = [];
-      appState.future = [];
-      appState.lastSnapshot = getSheetObject(false);
+      resetSheetUndoHistory();
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         appState.history = requestHistory;

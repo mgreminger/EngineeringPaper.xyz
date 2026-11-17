@@ -2,7 +2,7 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import { get as idbGet } from 'idb-keyval';
 
-import { diff, applyChangeset, revertChangeset, type Changeset } from 'json-diff-ts';
+import { create, type Delta } from 'jsondiffpatch';
 
 import { debounce } from './utility';
 import { cellFactory, type Cell } from './cells/Cells';
@@ -102,10 +102,6 @@ type AppState = {
 
   paperSize: "a4" | "letter";
   exportCenteredEquations: false;
-
-  past: Changeset[];
-  future: Changeset[];
-  lastSnapshot: Sheet;
 }
 
 export const appState: AppState = $state<AppState>({
@@ -162,10 +158,6 @@ export const appState: AppState = $state<AppState>({
 
   paperSize: "letter",
   exportCenteredEquations: false,
-
-  past: [],
-  future: [],
-  lastSnapshot: undefined,
 });
 
 appState.parserWrapper = new LatexParserWrapper(setParsePending);
@@ -282,9 +274,7 @@ export async function resetSheet() {
   appState.activeCell = 0;
   appState.sheetId = window.crypto.randomUUID();
 
-  appState.past = [];
-  appState.future = [];
-  appState.lastSnapshot = getSheetObject(false);
+  resetSheetUndoHistory();
 }
 
 let applyingSheetObject = false;
@@ -311,84 +301,81 @@ export async function applySheetObject(sheet: Sheet) {
   }
 }
 
+
+let past: Delta[] = [];
+let future: Delta[] = [];
+let lastSnapshot: Sheet | undefined;
 let applyingDiff = false;
 
+export function resetSheetUndoHistory() {
+  past = [];
+  future = [];
+  lastSnapshot = getSheetObject(false); 
+}
+
+const diffEngine = create({
+  arrays: { 
+    // Disabling move detection makes array diffing exponentially faster (O(N) instead of O(N^2))
+    detectMove: false 
+  },
+});
+
 export function storeUndoDiff() {
-  // If the change came from undo/redo, ignore it completely
-  if (applyingDiff) {
-    return;
-  }
+  if (applyingDiff || !lastSnapshot) return;
   
-  if (!appState.lastSnapshot) {
-    return;
-  }
   const currentSnapshot = getSheetObject(false);
 
-  const changeset = diff(appState.lastSnapshot, currentSnapshot, {
-    embeddedObjKeys: {
-      cells: 'id'
-    }
-  });
+  const delta = diffEngine.diff(lastSnapshot, currentSnapshot);
 
-  if (changeset.length > 0) {
-    appState.past.push(changeset);
-    console.log(`appState.past.length=${appState.past.length}`);
-    appState.future = []; 
-    appState.lastSnapshot = currentSnapshot;
+  // jsondiffpatch returns undefined if the objects are exactly identical
+  if (delta) {
+    past.push(delta);
+    console.log(`appState.past.length=${past.length}`);
+    future = []; 
+    lastSnapshot = currentSnapshot;
   }
 }
 
 export async function undo() {
-  if (appState.past.length === 0) {
-    return;
-  }
-  
-  applyingDiff = true; // 1. Lock the tracker
+  if (past.length === 0) return;
+  applyingDiff = true;
 
   try {
-    const changeset = appState.past.pop()!;
-    appState.future.push(changeset);
+    const delta = past.pop()!;
+    future.push(delta);
 
     let currentState = getSheetObject(false);
-    currentState = revertChangeset(currentState, changeset);
     
-    // This will trigger Svelte's reactivity, but storeUndoDiff will abort
+    diffEngine.unpatch(currentState, delta);
+    
+    lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
-
-    appState.lastSnapshot = currentState;
   } finally {
-    applyingDiff = false; // 2. Unlock the tracker safely
+    applyingDiff = false;
   }
-
-  console.log('undid!')
 }
 
 export async function redo() {
-  if (appState.future.length === 0) {
-    return;
-  }
-
-  applyingDiff = true; // 1. Lock the tracker
+  if (future.length === 0) return;
+  applyingDiff = true;
 
   try {
-    const changeset = appState.future.pop()!;
-    appState.past.push(changeset);
+    const delta = future.pop()!;
+    past.push(delta);
 
     let currentState = getSheetObject(false);
-    currentState = applyChangeset(currentState, changeset);
     
-    // This will trigger Svelte's reactivity, but storeUndoDiff will abort
+    diffEngine.patch(currentState, delta);
+    
+    lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
-
-    appState.lastSnapshot = currentState;
   } finally {
-    applyingDiff = false; // 2. Unlock the tracker safely
+    applyingDiff = false;
   }
-
-  console.log('redid');
 }
+
 
 export function incrementActiveCell() {
   if (appState.activeCell !== -1) {
