@@ -64,9 +64,9 @@
 
   $effect.pre(() => {
     if (parameterParsingStates.length !== numColumns) {
-      parameterParsingStates = Array.from({ length: numColumns }, (_, i) => parameterParsingStates[i] || getInitialParsingState());
-      parameterUnitParsingStates = Array.from({ length: numColumns }, (_, i) => parameterUnitParsingStates[i] || getInitialParsingState());
-      parserIds = Array.from({ length: numColumns }, (_, i) => parserIds[i] || appState.nextParserId++);
+      parameterParsingStates = Array.from({ length: numColumns }, (_, i) => parameterParsingStates[i] ?? getInitialParsingState());
+      parameterUnitParsingStates = Array.from({ length: numColumns }, (_, i) => parameterUnitParsingStates[i] ?? getInitialParsingState());
+      parserIds = Array.from({ length: numColumns }, (_, i) => parserIds[i] ?? appState.nextParserId++);
       
       if (combinedStatements.length < numColumns) {
         combinedStatements = [...combinedStatements, ...Array(numColumns - combinedStatements.length).fill(getBlankStatement())];
@@ -78,7 +78,7 @@
     if (rhsParsingStates.length !== numRows || (rhsParsingStates.length > 0 && rhsParsingStates[0].length !== numColumns)) {
       rhsParsingStates = Array.from({ length: numRows }, (_, i) => 
         Array.from({ length: numColumns }, (_, j) => 
-          rhsParsingStates[i]?.[j] || getInitialParsingState()
+          rhsParsingStates[i]?.[j] ?? getInitialParsingState()
         )
       );
     }
@@ -285,36 +285,19 @@
   }
 
   async function deleteRow(rowIndex: number) {
-    triggerSaveNeeded(true);
-
     if (tableCell.deleteRow(rowIndex)) {
       await handleSelectedRowChange();
     } else {
       await parseTableStatements();
     }
 
-    rhsParsingStates = [...rhsParsingStates.slice(0,rowIndex),
-                        ...rhsParsingStates.slice(rowIndex+1)];
-
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
   async function deleteColumn(colIndex: number) {
-    triggerSaveNeeded(true);
-
     tableCell.deleteColumn(colIndex);
-    combinedStatements = [...combinedStatements.slice(0,colIndex),
-    ...combinedStatements.slice(colIndex+1)];
-    parserIds = [...parserIds.slice(0,colIndex),
-                 ...parserIds.slice(colIndex+1)];
-
-    parameterUnitParsingStates = [...parameterUnitParsingStates.slice(0,colIndex),
-                                  ...parameterUnitParsingStates.slice(colIndex+1)];
-
-    parameterParsingStates = [...parameterParsingStates.slice(0,colIndex),
-                              ...parameterParsingStates.slice(colIndex+1)];
-
-    rhsParsingStates = rhsParsingStates.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    triggerSaveNeeded(true);
 
     await parseTableStatements();
 
