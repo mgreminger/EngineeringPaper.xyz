@@ -1,4 +1,4 @@
-import Quill, { Delta } from "quill";
+import Quill, { Delta, type Op } from "quill";
 import { BaseCell, type DatabaseDataTableCell, type DatabaseTableCell } from "./BaseCell";
 import type { Statement } from "../parser/types";
 
@@ -11,7 +11,7 @@ export default class TableCell extends BaseCell {
   rhsLatexs: string[][] = $state();
   selectedRow: number = $state();
   hideUnselected: boolean = $state();
-  rowDeltas: Delta[] = $state();
+  rowOpsArray: Op[][] = $state();
 
   constructedFromDataTable: boolean = $state();
   sourceDataTableCell: DatabaseDataTableCell | null = $state();
@@ -28,7 +28,7 @@ export default class TableCell extends BaseCell {
                         ['', '']];
       this.selectedRow = 0;
       this.hideUnselected = false;
-      this.rowDeltas = [];
+      this.rowOpsArray = [];
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else if (arg.type === "table") {
@@ -40,7 +40,9 @@ export default class TableCell extends BaseCell {
       this.rhsLatexs = arg.rhsLatexs.map(row => [...row]);
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
-      this.rowDeltas = arg.rowJsons ? arg.rowJsons.map((json: any) => new Delta(json)) : [];
+      // Old database entries used the whole Delta objects rather the the ops arrow
+      // Need to use the Delta constructor to handle both cases 
+      this.rowOpsArray = arg.rowJsons ? arg.rowJsons.map((json: any) => new Delta(structuredClone(json)).ops) : [];
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else {
@@ -64,7 +66,7 @@ export default class TableCell extends BaseCell {
 
       this.selectedRow = 0;
       this.hideUnselected = false;
-      this.rowDeltas = [];
+      this.rowOpsArray = [];
     }
   }
 
@@ -72,32 +74,32 @@ export default class TableCell extends BaseCell {
     return {
       type: "table",
       id: this.id,
-      rowLabels: this.rowLabels,
+      rowLabels: $state.snapshot(this.rowLabels),
       nextRowLabelId: this.nextRowLabelId,
-      parameterLatexs: this.parameterLatexs,
+      parameterLatexs: $state.snapshot(this.parameterLatexs),
       nextParameterId: this.nextParameterId,
-      parameterUnitLatexs: this.parameterUnitLatexs,
-      rhsLatexs: this.rhsLatexs,
+      parameterUnitLatexs: $state.snapshot(this.parameterUnitLatexs),
+      rhsLatexs: $state.snapshot(this.rhsLatexs),
       selectedRow: this.selectedRow,
       hideUnselected: this.hideUnselected,
-      rowJsons: this.rowDeltas
+      rowJsons: $state.snapshot(this.rowOpsArray)
     };
   }
 
   addRowDocumentation() {
-    this.rowDeltas = Array.from({length: this.rowLabels.length}, () => new Delta());
+    this.rowOpsArray = Array.from({length: this.rowLabels.length}, () => []);
   }
 
   deleteRowDocumentation() {
-    this.rowDeltas = [];
+    this.rowOpsArray = [];
   }
 
   addRow() {
     const newRowId = this.nextRowLabelId++;
     this.rowLabels = [...this.rowLabels, `Option ${newRowId}`];
     
-    if (this.rowDeltas.length > 0) {
-      this.rowDeltas = [...this.rowDeltas, new Delta()];
+    if (this.rowOpsArray.length > 0) {
+      this.rowOpsArray = [...this.rowOpsArray, []];
     }
 
     let newRhsRow: string[] = Array(this.parameterLatexs.length).fill(''); 
@@ -118,9 +120,9 @@ export default class TableCell extends BaseCell {
     this.rowLabels = [...this.rowLabels.slice(0,rowIndex),
                                     ...this.rowLabels.slice(rowIndex+1)];
 
-    if (this.rowDeltas.length > 0) {
-      this.rowDeltas = [...this.rowDeltas.slice(0,rowIndex),
-                        ...this.rowDeltas.slice(rowIndex+1)];
+    if (this.rowOpsArray.length > 0) {
+      this.rowOpsArray = [...this.rowOpsArray.slice(0,rowIndex),
+                     ...this.rowOpsArray.slice(rowIndex+1)];
     }
     
     this.rhsLatexs = [...this.rhsLatexs.slice(0,rowIndex), 

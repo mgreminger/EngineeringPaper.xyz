@@ -148,8 +148,8 @@
     const row = tableCell.selectedRow;
     let result = "";
 
-    if (tableCell.rowDeltas.length > 0) {
-      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
+    if (tableCell.rowOpsArray.length > 0) {
+      result += deltaToMarkdown(tableCell.rowOpsArray[row] ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
     }
 
     const columnExpressions = [];
@@ -452,14 +452,14 @@
 
 </style>
 
-{#if tableCell.rowDeltas.length > 0}
+{#if tableCell.rowOpsArray.length > 0}
   <div
     spellcheck={appState.activeCell === index}
   >
     {#key tableCell.selectedRow}
       <DocumentationField
         hideToolbar={hideToolbar}
-        bind:delta={tableCell.rowDeltas[tableCell.selectedRow]}
+        bind:ops={tableCell.rowOpsArray[tableCell.selectedRow]}
         update={triggerSaveNeeded}
       />
     {/key}
@@ -651,7 +651,7 @@
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
-      {#if tableCell.rowDeltas.length === 0}
+      {#if tableCell.rowOpsArray.length === 0}
         <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}

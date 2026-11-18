@@ -34,7 +34,7 @@
   }
 
   export function getMarkdown(centerEquations: boolean): string {
-    return deltaToMarkdown(documentationCell.delta?.ops ?? "");
+    return deltaToMarkdown(documentationCell.ops ?? "");
   }
 
   onMount(() => {
@@ -64,7 +64,7 @@
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={richTextInstance}
-    bind:delta={documentationCell.delta}
+    bind:ops={documentationCell.ops}
     update={triggerSaveNeeded}
   />
 </div>

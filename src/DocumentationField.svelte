@@ -135,7 +135,7 @@
 </script>
 
 <script lang="ts">
-  import type { Delta, Range } from "quill";
+  import { Delta, type Op, type Range } from "quill";
   import type { Blot } from "parchment";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
@@ -143,21 +143,21 @@
   interface Props {
     hideToolbar: boolean;
     quill?: Quill;
-    delta: Delta;
+    ops: Op[];
     update?: () => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
-    delta = $bindable(),
+    ops = $bindable(),
     update
   }: Props = $props();
 
   let editorDiv;
 
   // Tracker to prevent infinite loops when two-way binding Delta
-  let lastEmittedDelta: Delta | null = null;
+  let lastEmittedDelta: Op[] | null = null;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
@@ -165,17 +165,16 @@
 
   // React to changes in delta coming from the parent component
   $effect(() => {
-    const incomingDelta = delta;
+    const incomingOps = ops;
 
-    if (!quill || !incomingDelta) return;
+    if (!quill || !incomingOps) return;
 
     // Skip if the change came from the user typing in the editor
-    if (incomingDelta === lastEmittedDelta) return;
+    if (incomingOps === lastEmittedDelta) return;
 
     untrack(() => {
       // Convert plain object/array back to a Quill Delta instance
-      const Delta = Quill.import('delta');
-      const incomingDeltaInstance = new Delta(incomingDelta);
+      const incomingDeltaInstance = new Delta(incomingOps);
 
       // Skip if the external payload identically matches the editor state
       const currentContents = quill.getContents();
@@ -288,8 +287,8 @@
     });
 
     // Populate initial value if parent component passes delta in on mount
-    if (delta) {
-      quill.setContents(delta, 'api');
+    if (ops) {
+      quill.setContents(ops, 'api');
     }
 
     quill.on('text-change', (d, oldDelta, source) => {
@@ -297,8 +296,8 @@
       
       // If the user made the change, update the binding and our tracker
       if (source === 'user') {
-        lastEmittedDelta = currentContents;
-        delta = currentContents;
+        lastEmittedDelta = currentContents.ops;
+        ops = currentContents.ops;
         update?.();
       }
     });
