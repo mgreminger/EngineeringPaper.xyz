@@ -88,7 +88,6 @@
           } else if (statement.type === "scatterQuery") {
             statement.cellNum = index;
           }
-          console.log(statement)
           statements.push(statement);
         }
       }

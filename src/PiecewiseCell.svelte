@@ -49,6 +49,13 @@
 
   let expressionMathFields: MathField[] = $state([]);
 
+  $effect.pre(() => {
+    if (expressionParsingStates.length !== piecewiseCell.expressionLatexs.length) {
+      expressionParsingStates = Array.from({ length: piecewiseCell.expressionLatexs.length }, (_, i) => expressionParsingStates[i] ?? getInitialParsingState());
+      conditionParsingStates = Array.from({ length: piecewiseCell.conditionLatexs.length }, (_, i) => conditionParsingStates[i] ?? getInitialParsingState());
+    }
+  });
+
   let parsingError = $derived.by(() => {
     return parameterParsingState.parsingError || 
            expressionParsingStates.some(value => value.parsingError) ||
