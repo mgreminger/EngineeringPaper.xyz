@@ -1,5 +1,5 @@
 <script lang="ts">
-  import appState, { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { unit } from 'mathjs';
 
@@ -29,11 +29,15 @@
   interface Props {
     index: number;
     fluidCell: FluidCell;
+    mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
-    fluidCell = $bindable(),
+    fluidCell,
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;

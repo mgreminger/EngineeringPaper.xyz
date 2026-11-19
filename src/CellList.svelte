@@ -316,7 +316,7 @@
       >
         <Cell
           index={i}
-          bind:cell={appState.cells[i]}
+          cell={cell}
           startDrag={startDrag}
           {insertSheet}
           {updateNumberFormat}
