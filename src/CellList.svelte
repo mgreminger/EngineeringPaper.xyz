@@ -11,6 +11,7 @@
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
   import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
+  import { flushSync } from "svelte";
 
   interface Props {
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
@@ -42,6 +43,8 @@
   }
 
   export function getParsePending() {
+    flushSync();
+
     if (!cellElements) {
       return true;
     }
@@ -57,6 +60,8 @@
   }
 
   export function checkParsingErrors(): boolean {
+    flushSync();
+
     if (!cellElements) {
       return true;
     }
@@ -80,6 +85,8 @@
     const fluidFunctions: FluidFunction[] = [];
     const codeCellFunctions: CodeCellFunction[] = [];
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    flushSync();
 
     if (cellElements) {
       for (const cell of cellElements) {
@@ -119,6 +126,8 @@
   }
 
   export async function getMarkdown(centerEquations= false): Promise<string> {
+    flushSync();
+
     let markdown = "";
 
     for (const cell of cellElements) {
