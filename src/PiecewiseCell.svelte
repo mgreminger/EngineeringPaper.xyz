@@ -29,7 +29,7 @@
 
   let {
     index,
-    piecewiseCell,
+    piecewiseCell = $bindable(),
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;

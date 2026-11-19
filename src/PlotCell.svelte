@@ -32,7 +32,7 @@
 
   let {
     index,
-    plotCell,
+    plotCell = $bindable(),
   }: Props = $props();
 
   interface PlotRenderData {

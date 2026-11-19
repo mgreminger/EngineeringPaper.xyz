@@ -1,5 +1,5 @@
 <script lang="ts">
-  import appState from "./stores.svelte";
+  import appState, { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -25,15 +25,11 @@
   interface Props {
     index: number;
     systemCell: SystemCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
-    systemCell,
-    mathCellChanged,
-    triggerSaveNeeded
+    systemCell = $bindable(),
   }: Props = $props();
 
   let numVars = $state(0);

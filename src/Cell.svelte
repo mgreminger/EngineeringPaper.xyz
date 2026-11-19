@@ -52,7 +52,7 @@
 
   let {
     index,
-    cell,
+    cell = $bindable(),
     updateNumberFormat,
     updateDataTableNumberFormat,
     generateCode,
@@ -296,25 +296,25 @@
         {generateCode}
         bind:this={cellElement}
         index={index}
-        mathCell={cell}
+        bind:mathCell={cell}
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
         bind:this={cellElement}
         index={index}
-        documentationCell={cell}
+        bind:documentationCell={cell}
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
         bind:this={cellElement}
         index={index}
-        plotCell={cell}
+        bind:plotCell={cell}
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
         bind:this={cellElement}
         index={index}
-        tableCell={cell}
+        bind:tableCell={cell}
       />
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
@@ -322,51 +322,41 @@
         {updateDataTableNumberFormat}
         bind:this={cellElement}
         index={index}
-        dataTableCell={cell}
+        bind:dataTableCell={cell}
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
         bind:this={cellElement}
         index={index}
-        piecewiseCell={cell}
+        bind:piecewiseCell={cell}
       />
     {:else if cell instanceof SystemCell}
       <SystemCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
-        systemCell={cell}
+        bind:systemCell={cell}
       />
     {:else if cell instanceof FluidCell}
       <FluidCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
-        fluidCell={cell}
+        bind:fluidCell={cell}
       />
     {:else if cell instanceof CodeCell}
       <CodeCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
-        codeCell={cell}
+        bind:codeCell={cell}
       />
     {:else if cell instanceof DeletedCell}
       <DeletedCellElement
         bind:this={cellElement}
         index={index}
         deletedCell={cell}
-        {mathCellChanged}
-        {triggerSaveNeeded}
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         {insertSheet}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         insertCell={cell}

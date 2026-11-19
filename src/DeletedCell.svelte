@@ -1,16 +1,14 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import appState from "./stores.svelte";
+  import appState, { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   interface Props {
     index: number;
     deletedCell: DeletedCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: () => void;
   }
 
-  let { index, deletedCell, mathCellChanged, triggerSaveNeeded }: Props = $props();  
+  let { index, deletedCell }: Props = $props();  
 
   const timeout = 3000;
   const delta = 50;

@@ -37,7 +37,7 @@
 
   let {
       index,
-      mathCell,
+      mathCell = $bindable(),
       updateNumberFormat,
       generateCode,
     }: Props = $props(); 

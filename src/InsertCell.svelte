@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
   import appState from "./stores.svelte";
-  import { addCell } from './stores.svelte';
+  import { addCell, triggerSaveNeeded, mathCellChanged } from './stores.svelte';
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -21,16 +21,12 @@
     index: number;
     insertCell: InsertCell;
     insertSheet: (arg: {detail: {index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: () => void;
   }
 
   let {
     index,
     insertCell,
     insertSheet,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   const timeout = 30000;

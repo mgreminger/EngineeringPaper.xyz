@@ -38,7 +38,7 @@
 
   let {
     index,
-    tableCell,
+    tableCell = $bindable(),
   }: Props = $props();
 
   let numColumns = $derived(tableCell.parameterLatexs.length);

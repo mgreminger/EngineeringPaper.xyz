@@ -15,7 +15,7 @@
 
   let {
     index,
-    documentationCell
+    documentationCell = $bindable()
   }: Props = $props();
 
   let hideToolbar = $derived(!(appState.activeCell === index));

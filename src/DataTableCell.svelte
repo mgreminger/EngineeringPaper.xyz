@@ -52,7 +52,7 @@
 
   let {
     index,
-    dataTableCell,
+    dataTableCell = $bindable(),
     modal,
     updateDataTableNumberFormat
   }: Props = $props();

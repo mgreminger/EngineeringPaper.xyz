@@ -1,5 +1,5 @@
 <script lang="ts">
-  import appState from "./stores.svelte";
+  import appState, { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   import { onMount, tick, untrack } from "svelte";
 
@@ -27,15 +27,11 @@
   interface Props {
     index: number;
     codeCell: CodeCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
-    codeCell,
-    mathCellChanged,
-    triggerSaveNeeded
+    codeCell = $bindable(),
   }: Props = $props();
 
   let codeEditor: import("./CodeEditor.svelte").default;
