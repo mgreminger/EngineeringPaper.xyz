@@ -53,6 +53,12 @@
   // svelte-ignore state_referenced_locally
   let parsingStates: ParsingState[] = $state(Array.from({ length: numRows }, () => getInitialParsingState()));
 
+  $effect.pre(() => {
+    if (parsingStates.length !== numRows) {
+      parsingStates = Array.from({ length: numRows }, (_, i) => parsingStates[i] ?? getInitialParsingState());
+    }
+  });
+
   let mathFields: MathField[] = $state([]);
   
   let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(plotCell, appState.resultsInvalid, appState.results[index]));
