@@ -49,6 +49,12 @@
 
   let expressionMathFields: MathField[] = [];
 
+  $effect.pre(() => {
+    if (expressionParsingStates.length !== numRows) {
+      expressionParsingStates = Array.from({ length: numRows }, (_, i) => expressionParsingStates[i] ?? getInitialParsingState());
+    }
+  });
+
   let parsingError = $derived.by(() => {
     return parameterListParsingState.parsingError || 
            expressionParsingStates.some(value => value.parsingError);
