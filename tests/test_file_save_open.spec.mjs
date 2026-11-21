@@ -479,7 +479,6 @@ test('Test opening .pro sheet with an import cell', async ({ page, browserName }
 
   // delete the import cell
   await page.locator("#delete-0").click();
-  await page.locator("#delete-0").click();
 
   // make sure results appear after import cell is deleted
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});
