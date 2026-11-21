@@ -336,6 +336,9 @@ export function storeUndoDiff() {
 }
 
 export async function undo() {
+  // Capture any dangling unsaved changes before attempting undo
+  storeUndoDiff();
+
   if (past.length === 0) return;
   applyingDiff = true;
 
@@ -356,6 +359,9 @@ export async function undo() {
 }
 
 export async function redo() {
+  // Clear redo history if there is an untracked change
+  storeUndoDiff();
+
   if (future.length === 0) return;
   applyingDiff = true;
 
