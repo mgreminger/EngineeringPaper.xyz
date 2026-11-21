@@ -1,13 +1,11 @@
 <script lang="ts">
   import { deltaToMarkdown } from "quill-delta-to-markdown";
-  import type { Delta } from "quill";
 
-  import appState, { restoreDataTable } from "./stores.svelte";
+  import appState, { restoreDataTable, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
   import type TableCell from "./cells/TableCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import TextBox from "./TextBox.svelte";
@@ -25,27 +23,116 @@
   import Row from "carbon-icons-svelte/lib/Row.svelte";
   import IconButton from "./IconButton.svelte";
   import { prepLatexForMarkdown } from "./utility";
+  import { getBlankStatement, getInitialParsingState, type ParsingState } from "./parser/utility";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
     tableCell: TableCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
     tableCell,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
-  let numColumns = $derived(tableCell.parameterFields.length);
+  let numColumns = $derived(tableCell.parameterLatexs.length);
   let numRows = $derived(tableCell.rowLabels.length);
   let hideUnselected = $derived(tableCell.hideUnselected);
   let hideToolbar = $derived(appState.activeCell !== index);
+  // svelte-ignore state_referenced_locally
+  let columnTypes = $derived(tableCell.parameterUnitLatexs.map(unitLatex => unitLatex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number"));
 
   let containerDiv: HTMLDivElement;
+
+  // svelte-ignore state_referenced_locally
+  let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
+  // svelte-ignore state_referenced_locally
+  let parameterUnitParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
+  // svelte-ignore state_referenced_locally
+  let rhsParsingStates: ParsingState[][] = $state(Array.from({ length: numRows }, () => Array.from({ length: numColumns }, () => getInitialParsingState())));
+
+  // svelte-ignore state_referenced_locally
+  let parserIds = $state(Array.from({length: numColumns}, () => appState.nextParserId++));
+  let combinedStatements: Statement[] = $state([]);
+  let combinedParsePending = $state(false);
+
+  $effect.pre(() => {
+    if (parameterParsingStates.length !== numColumns) {
+      parameterParsingStates = Array.from({ length: numColumns }, (_, i) => parameterParsingStates[i] ?? getInitialParsingState());
+      parameterUnitParsingStates = Array.from({ length: numColumns }, (_, i) => parameterUnitParsingStates[i] ?? getInitialParsingState());
+      parserIds = Array.from({ length: numColumns }, (_, i) => parserIds[i] ?? appState.nextParserId++);
+      
+      if (combinedStatements.length < numColumns) {
+        combinedStatements = [...combinedStatements, ...Array(numColumns - combinedStatements.length).fill(getBlankStatement())];
+      } else if (combinedStatements.length > numColumns) {
+        combinedStatements = combinedStatements.slice(0, numColumns);
+      }
+    }
+
+    if (rhsParsingStates.length !== numRows || (rhsParsingStates.length > 0 && rhsParsingStates[0].length !== numColumns)) {
+      rhsParsingStates = Array.from({ length: numRows }, (_, i) => 
+        Array.from({ length: numColumns }, (_, j) => 
+          rhsParsingStates[i]?.[j] ?? getInitialParsingState()
+        )
+      );
+    }
+  });
+
+  let parsingError = $derived.by(() => {
+    return parameterParsingStates.some(value => value.parsingError) ||
+           parameterUnitParsingStates.some(value => value.parsingError) ||
+           rhsParsingStates.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
+  });
+
+  let localParsePending = $derived.by(() => {
+    return parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           rhsParsingStates.filter((row, index) => tableCell.hideUnselected ? index === tableCell.selectedRow : true).reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
+  });
+
+  let parsePending = $derived.by(() => {
+    return combinedParsePending || localParsePending;
+  });
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    endStatements.push(...combinedStatements);
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean) {
     let startDelimiter: string;
@@ -61,20 +148,20 @@
     const row = tableCell.selectedRow;
     let result = "";
 
-    if (tableCell.rowDeltas.length > 0) {
-      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
+    if (tableCell.rowOpsArray.length > 0) {
+      result += deltaToMarkdown(tableCell.rowOpsArray[row] ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
     }
 
     const columnExpressions = [];
 
-    for (const [col, parameter] of tableCell.parameterFields.entries()) {
-      if (tableCell.rhsFields[row][col].latex.replaceAll(/\\:?/g,'').trim() !== "") {
-        columnExpressions.push(`${prepLatexForMarkdown(parameter.latex)} & = \\quad ${prepLatexForMarkdown(tableCell.rhsFields[row][col].latex)} ${prepLatexForMarkdown(tableCell.parameterUnitFields[col].latex)}`);
+    for (const [col, parameter] of tableCell.parameterLatexs.entries()) {
+      if (tableCell.rhsLatexs[row][col].replaceAll(/\\:?/g,'').trim() !== "") {
+        columnExpressions.push(`${prepLatexForMarkdown(parameter)} & = \\quad ${prepLatexForMarkdown(tableCell.rhsLatexs[row][col])} ${prepLatexForMarkdown(tableCell.parameterUnitLatexs[col])}`);
       }
     }
 
     if (columnExpressions.length > 0) {
-      result += `${startDelimiter}\\text{${tableCell.rowLabels[row].label}} \\quad `;
+      result += `${startDelimiter}\\text{${tableCell.rowLabels[row]}} \\quad `;
 
       if (columnExpressions.length > 1) {
         result += ` \\begin{cases} `;
@@ -97,10 +184,6 @@
   }
 
   onMount(() => {
-    if (tableCell.rowDeltas.length > 0) {
-      tableCell.richTextInstance.setContents(tableCell.rowDeltas[tableCell.selectedRow]);
-    }
-
     if (appState.activeCell === index) {
       focus();
     }
@@ -123,14 +206,47 @@
     }
   }
 
+  let currentParseId = 0;
+  async function parseTableStatements() {
+    const rowIndex = tableCell.selectedRow;
+    const newTableStatements: Statement[] = [];
+  
+    if (!(localParsePending || parsingError)) {
+      const executionId = ++currentParseId;
+      combinedStatements = [];
+      
+      combinedParsePending = true;
+      
+      for (let colIndex = 0; colIndex < tableCell.parameterLatexs.length; colIndex++) {
+        let combinedLatex: string;
+        if (tableCell.rhsLatexs[rowIndex][colIndex].replaceAll(/\\:?/g,'').trim() !== "") {
+          combinedLatex = tableCell.parameterLatexs[colIndex] + "=" +
+                          tableCell.rhsLatexs[rowIndex][colIndex] +
+                          tableCell.parameterUnitLatexs[colIndex];
+
+          const parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[colIndex], 'math');
+
+          if (executionId !== currentParseId) return;
+
+          if (!parsingResult.parsingError) {
+            newTableStatements.push(parsingResult.statement);
+          } else {
+            console.warn('Internal table cell parsing error.');
+          }
+
+        }
+      }
+      
+      if (executionId === currentParseId) {
+        combinedStatements = newTableStatements;
+        combinedParsePending = false;
+      }
+    }
+  }
+
   async function handleSelectedRowChange() {
     triggerSaveNeeded(true);
-    
-    await tableCell.parseTableStatements();
-    if (tableCell.rowDeltas.length > 0) {
-      (tableCell.richTextInstance as any).setContents(tableCell.rowDeltas[tableCell.selectedRow]);
-    }
-    
+    await parseTableStatements();
     mathCellChanged();
   }
 
@@ -158,44 +274,37 @@
 
   async function addRow() {
     tableCell.addRow();
-    appState.cells = appState.cells;
     await tick();
     highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
     tableCell.addColumn();
-    appState.cells[index] = appState.cells[index];
-
     triggerSaveNeeded();
     mathCellChanged();
   }
 
   async function deleteRow(rowIndex: number) {
-    triggerSaveNeeded(true);
-
     if (tableCell.deleteRow(rowIndex)) {
       await handleSelectedRowChange();
     } else {
-      await tableCell.parseTableStatements();
+      await parseTableStatements();
     }
-    
-    appState.cells[index] = appState.cells[index];
 
+    triggerSaveNeeded(true);
     mathCellChanged();
   }
 
   async function deleteColumn(colIndex: number) {
-    triggerSaveNeeded(true);
-    
     tableCell.deleteColumn(colIndex);
-    await tableCell.parseTableStatements();
-    appState.cells[index] = appState.cells[index];
+    triggerSaveNeeded(true);
+
+    await parseTableStatements();
 
     mathCellChanged();
   }
-  
 
+  
   function handleEnter(row: number) {
     if (!hideUnselected) {
       if (row == numRows-1) {
@@ -206,20 +315,9 @@
     }
   }
 
-
-  async function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
-    triggerSaveNeeded(true);
-
-    if (mathField !== undefined) {
-      await mathField.parseLatex(latex);
-    } else {
-      await tableCell.parseUnitField(latex, column);
-    }
-    
-    await tableCell.parseTableStatements();
-
-    appState.cells[index] = appState.cells[index];
-
+  
+  async function parseLatex() {
+    await parseTableStatements();
     mathCellChanged();
   }
 
@@ -337,18 +435,17 @@
 
 </style>
 
-{#if tableCell.rowDeltas.length > 0}
+{#if tableCell.rowOpsArray.length > 0}
   <div
     spellcheck={appState.activeCell === index}
   >
-    <DocumentationField
-      hideToolbar={hideToolbar}
-      bind:quill={tableCell.richTextInstance}
-      update={(e: {detail: {delta: Delta}}) => {
-         tableCell.rowDeltas[tableCell.selectedRow] = e.detail.delta;
-         triggerSaveNeeded();
-      }}
-    />
+    {#key tableCell.selectedRow}
+      <DocumentationField
+        hideToolbar={hideToolbar}
+        bind:ops={tableCell.rowOpsArray[tableCell.selectedRow]}
+        update={triggerSaveNeeded}
+      />
+    {/key}
   </div>
 {/if}
 
@@ -380,118 +477,101 @@
   bind:this= {containerDiv}
   spellcheck={appState.activeCell === index}
 >
-  {#if tableCell.parameterFields}
-    {#each tableCell.parameterFields as mathField, j (mathField.id)}
-      <div
-        class="item math-field"
-        id={`parameter-name-${index}-${j}`}
-        style="grid-column: {j + 2}; grid-row: 1;"
-      >
-        <MathField
-          editable={true}
-          update={(e) => parseLatex(e.latex, j, mathField)}
-          mathField={mathField}
-          parsingError={mathField.parsingError}
-          parsePending={mathField.parsePending}
-          bind:this={mathField.element}
-          latex={mathField.latex}
-        />
-        {#if mathField.parsingError && !mathField.parsePending}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {/if}
-      </div>
-    {/each}
-  {/if}
-
-  {#if tableCell.parameterUnitFields}
-    {#each tableCell.parameterUnitFields as mathField, j (mathField.id)}
-      <div
-        class="item math-field"
-        id={`parameter-units-${index}-${j}`}
-        style="grid-column: {j + 2}; grid-row: 2;"
-      >
-        <MathField
-          editable={true}
-          update={(e) => parseLatex(e.latex, j)}
-          mathField={mathField}
-          parsingError={mathField.parsingError}
-          parsePending={mathField.parsePending}
-          bind:this={mathField.element}
-          latex={mathField.latex}
-        />
-        
-        {#if mathField.parsingError && !mathField.parsePending}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {/if}
-      </div>
-    {/each}
-  {/if}
-
-
-  {#if tableCell.rhsFields}
-    {#each tableCell.rhsFields as rowFields, i }
-
-      {#if tableCell.rowLabels}
-        {#if tableCell.rowLabels[i]}
-          {#if !hideUnselected || i === tableCell.selectedRow}
-            <div
-              class="item row-label"
-              style="grid-column: 1; grid-row: {i+3};"
-            >
-              <input 
-                type="radio"
-                id={`row-radio-${index}-${i}`}
-                name={`selected_row_${index}`}
-                bind:group={tableCell.selectedRow}
-                value={i}
-                onchange={handleSelectedRowChange}
-              >
-              <TextBox
-                enter={() => handleEnter(i)}
-                id={`row-label-${index}-${i}`}
-                bind:textContent={tableCell.rowLabels[i].label} 
-                oninput={() => triggerSaveNeeded()}
-              >
-              </TextBox>
-            </div>
-          {/if}
-        {/if}
+  {#each {length: tableCell.parameterLatexs.length}, j}
+    <div
+      class="item math-field"
+      id={`parameter-name-${index}-${j}`}
+      style="grid-column: {j + 2}; grid-row: 1;"
+    >
+      <MathField
+        editable={true}
+        type="parameter"
+        update={parseLatex}
+        bind:latex={tableCell.parameterLatexs[j]}
+        bind:parsingState={parameterParsingStates[j]}
+      />
+      {#if parameterParsingStates[j].parsingError && !parameterParsingStates[j].parsePending}
+        <TooltipIcon direction="right" align="end">
+          <span slot="tooltipText">{parameterParsingStates[j].parsingErrorMessage}</span>
+          <Error class="error"/>
+        </TooltipIcon>
       {/if}
+    </div>
+  {/each}
 
-      {#each rowFields as mathField, j (mathField.id)}
-        {#if !hideUnselected || i === tableCell.selectedRow}
-          <div
-            class="item math-field"
-            id={`grid-cell-${index}-${i}-${j}`}
-            style="grid-column: {j+2}; grid-row: {i+3};"
-          >
-            <MathField
-              editable={true}
-              update={(e) => parseLatex(e.latex, j, mathField)}
-              enter={() => handleEnter(i)}
-              mathField={mathField}
-              parsingError={mathField.parsingError}
-              parsePending={mathField.parsePending}
-              bind:this={mathField.element}
-              latex={mathField.latex}
-            />
-            {#if mathField.parsingError && !mathField.parsePending}
-              <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-                <Error class="error"/>
-              </TooltipIcon>
-            {/if}
-          </div>
-        {/if}
-      {/each}
+  {#each {length: tableCell.parameterUnitLatexs.length}, j}
+    <div
+      class="item math-field"
+      id={`parameter-units-${index}-${j}`}
+      style="grid-column: {j + 2}; grid-row: 2;"
+    >
+      <MathField
+        editable={true}
+        type="units"
+        bind:latex={tableCell.parameterUnitLatexs[j]}
+        update={parseLatex}
+        bind:parsingState={parameterUnitParsingStates[j]}
+      />
+      
+      {#if parameterUnitParsingStates[j].parsingError && !parameterUnitParsingStates[j].parsePending}
+        <TooltipIcon direction="right" align="end">
+          <span slot="tooltipText">{parameterUnitParsingStates[j].parsingErrorMessage}</span>
+          <Error class="error"/>
+        </TooltipIcon>
+      {/if}
+    </div>
+  {/each}
+
+
+  {#each {length: tableCell.rhsLatexs.length}, i }
+    {#if !hideUnselected || i === tableCell.selectedRow}
+      <div
+        class="item row-label"
+        style="grid-column: 1; grid-row: {i+3};"
+      >
+        <input 
+          type="radio"
+          id={`row-radio-${index}-${i}`}
+          name={`selected_row_${index}`}
+          bind:group={tableCell.selectedRow}
+          value={i}
+          onchange={handleSelectedRowChange}
+        >
+        <TextBox
+          enter={() => handleEnter(i)}
+          id={`row-label-${index}-${i}`}
+          bind:textContent={tableCell.rowLabels[i]} 
+          oninput={() => triggerSaveNeeded()}
+        >
+        </TextBox>
+      </div>
+    {/if}
+
+    {#each {length: numColumns}, j}
+      {#if !hideUnselected || i === tableCell.selectedRow}
+        <div
+          class="item math-field"
+          id={`grid-cell-${index}-${i}-${j}`}
+          style="grid-column: {j+2}; grid-row: {i+3};"
+        >
+          <MathField
+            editable={true}
+            type={columnTypes[j]}
+            bind:latex={tableCell.rhsLatexs[i][j]}
+            update={parseLatex}
+            enter={() => handleEnter(i)}
+            bind:parsingState={rhsParsingStates[i][j]}
+          />
+          {#if rhsParsingStates[i][j].parsingError && !rhsParsingStates[i][j].parsePending}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{rhsParsingStates[i][j].parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
+        </div>
+      {/if}
     {/each}
-  {/if}
+  {/each}
 
 
   {#if numColumns > 1 && !hideUnselected}
@@ -554,7 +634,7 @@
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
-      {#if tableCell.rowDeltas.length === 0}
+      {#if tableCell.rowOpsArray.length === 0}
         <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
@@ -585,7 +665,7 @@
         <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          click={() => tableCell.hideUnselected = false}
+          click={() => {tableCell.hideUnselected = false; triggerSaveNeeded();}}
         >
           <ShowDataCards />
         </IconButton>
@@ -593,7 +673,7 @@
         <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          click={() => tableCell.hideUnselected = true}
+          click={() => {tableCell.hideUnselected = true; triggerSaveNeeded();}}
         >
           <Row />
         </IconButton>
@@ -607,4 +687,3 @@
   </div>
 
 </div>
-

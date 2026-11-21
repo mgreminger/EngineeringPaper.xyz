@@ -2,19 +2,20 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import { get as idbGet } from 'idb-keyval';
 
-import type { Cell } from './cells/Cells';
+import { create, type Delta } from 'jsondiffpatch';
+
+import { debounce } from './utility';
+import { cellFactory, type Cell } from './cells/Cells';
 import { BaseCell, type CellTypes, type DatabaseDataTableCell } from './cells/BaseCell';
 import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell.svelte';
 import TableCell from './cells/TableCell.svelte';
 import DataTableCell from './cells/DataTableCell.svelte';
-import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
 import CodeCell from './cells/CodeCell.svelte';
 import PlotCell from './cells/PlotCell.svelte';
-import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 import ImportCell from './cells/ImportCell.svelte';
 import PageBreakCell from './cells/PageBreakCell';
@@ -22,16 +23,51 @@ import PageBreakCell from './cells/PageBreakCell';
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
               MatrixResult, SystemResult, DataTableResult, 
-              CodeCellResult, RenderResult} from './resultTypes';
+              CodeCellResult, RenderResult,
+              Results} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
+import type { MathfieldElement } from "mathlive";
+
 import DOMPurify from 'dompurify';
+import type { StatementsAndSystems } from './types';
+
+import CellList from './CellList.svelte';
+import { LatexParserWrapper } from './parser/parserWrapper';
+import { tick } from 'svelte';
 
 const defaultTitle = 'New Sheet';
+
+export const debounceTime = 300;
+
+let pyodideTimeoutRef = 0;
+const pyodideTimeoutLength = 2000;
+
+function setParsePending(parsePending: boolean) {
+  appState.parsePending = parsePending;
+}
 
 type AppState = {
   currentVersion: number;
   termsVersion: number;
+
+  parserWrapper: LatexParserWrapper;
+  nextParserId: number;
+
+  cellListElement: CellList,
+
+  refreshCounter: bigint;
+  inDebounce: boolean;
+  parsePending: boolean;
+  noParsingErrors: boolean;
+  populatingPage: boolean;
+  error: string | null;
+
+  pyodidePromise: Promise<Boolean> | null;
+  pyodideTimeout: boolean;
+
+  pyodideWorker: Worker;
+  forcePyodidePromiseRejection: () => void;
 
   unsavedChange: boolean;
   autosaveNeeded: boolean;
@@ -51,7 +87,9 @@ type AppState = {
 
   prefersReducedMotion: boolean;
   activeCell: number;
-  activeMathField: MathField | null;
+  activeMathField: MathfieldElement | null;
+
+  codeGenerationSource: number | null;
 
   debug: boolean;
 
@@ -61,15 +99,31 @@ type AppState = {
 
   inCellInsertMode: boolean;
 
-  parsePending: boolean;
-
   paperSize: "a4" | "letter";
   exportCenteredEquations: false;
 }
 
-const appState: AppState = $state<AppState>({
+export const appState: AppState = $state<AppState>({
   currentVersion: 20260926,
   termsVersion: 20260809,
+
+  parserWrapper: undefined,
+  nextParserId: 0,
+
+  cellListElement: undefined,
+
+  refreshCounter: BigInt(1),
+  inDebounce: false,
+  parsePending: false,
+  noParsingErrors: true,
+  populatingPage: false,
+  error: null,
+
+  pyodidePromise: null,
+  pyodideTimeout: false,
+
+  pyodideWorker: undefined,
+  forcePyodidePromiseRejection: undefined,
 
   unsavedChange: false,
   autosaveNeeded: false,
@@ -91,6 +145,8 @@ const appState: AppState = $state<AppState>({
   activeCell: -1,
   activeMathField: null,
 
+  codeGenerationSource: null,
+
   debug: false,
 
   modifierKey: /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey",
@@ -99,11 +155,11 @@ const appState: AppState = $state<AppState>({
 
   inCellInsertMode: false,
 
-  parsePending: false,
-
   paperSize: "letter",
-  exportCenteredEquations: false
+  exportCenteredEquations: false,
 });
+
+appState.parserWrapper = new LatexParserWrapper(setParsePending);
 
 export default appState;
 
@@ -171,16 +227,16 @@ export function handleClickInCell(index: number) {
 export function getSheetObject(includeResults=true): Sheet {
   return {
     version: appState.currentVersion,
-    config: appState.config,
+    config: $state.snapshot(appState.config),
     cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
     title: appState.title,
-    results: includeResults ? (appState.resultsInvalid ? [] : appState.results) : [],
-    system_results: includeResults ? appState.system_results : [],
-    codeCellResults: includeResults ? appState.codeCellResults : {},
-    sub_results: includeResults ? [...appState.sub_results.entries()] : [],
+    results: includeResults ? (appState.resultsInvalid ? [] : $state.snapshot(appState.results)) : [],
+    system_results: includeResults ? $state.snapshot(appState.system_results) : [],
+    codeCellResults: includeResults ? $state.snapshot(appState.codeCellResults) : {},
+    sub_results: includeResults ? [...$state.snapshot(appState.sub_results).entries()] : [],
     nextId: BaseCell.nextId,
     sheetId: appState.sheetId,
-    insertedSheets: appState.insertedSheets
+    insertedSheets: $state.snapshot(appState.insertedSheets)
   };
 }
 
@@ -216,6 +272,113 @@ export async function resetSheet() {
   appState.insertedSheets = [];
   appState.activeCell = 0;
   appState.sheetId = window.crypto.randomUUID();
+
+  resetSheetUndoHistory();
+}
+
+let applyingSheetObject = false;
+
+export async function applySheetObject(sheet: Sheet) {
+  if (applyingSheetObject) {
+    console.warn('Already applying sheet object cannot apply another sheet object');
+    return;
+  }
+
+  applyingSheetObject = true;
+
+  appState.title = sheet.title;
+  BaseCell.nextId = sheet.nextId;
+  appState.sheetId = sheet.sheetId;
+  // old documents in database will not have the insertedSheets property
+  appState.insertedSheets = sheet.insertedSheets ?? [];
+  appState.config = normalizeConfig(sheet.config);
+
+  try {
+    appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+  } finally {
+    applyingSheetObject = false;
+  }
+}
+
+
+let past: Delta[] = [];
+let future: Delta[] = [];
+let lastSnapshot: Sheet | undefined;
+let applyingDiff = false;
+
+export function resetSheetUndoHistory() {
+  past = [];
+  future = [];
+  lastSnapshot = getSheetObject(false); 
+}
+
+const diffEngine = create({
+  arrays: { 
+    // Disabling move detection makes array diffing exponentially faster (O(N) instead of O(N^2))
+    detectMove: false 
+  },
+});
+
+export function storeUndoDiff() {
+  if (applyingDiff || !lastSnapshot) return;
+  
+  const currentSnapshot = getSheetObject(false);
+
+  const delta = diffEngine.diff(lastSnapshot, currentSnapshot);
+
+  // jsondiffpatch returns undefined if the objects are exactly identical
+  if (delta) {
+    past.push(delta);
+    console.log(`appState.past.length=${past.length}`);
+    future = []; 
+    lastSnapshot = currentSnapshot;
+  }
+}
+
+export async function undo() {
+  // Capture any dangling unsaved changes before attempting undo
+  storeUndoDiff();
+
+  if (past.length === 0) return;
+  applyingDiff = true;
+
+  try {
+    const delta = past.pop()!;
+    future.push(delta);
+
+    let currentState = getSheetObject(false);
+    
+    diffEngine.unpatch(currentState, delta);
+    
+    lastSnapshot = currentState;
+    await applySheetObject(currentState);
+    await tick();
+  } finally {
+    applyingDiff = false;
+  }
+}
+
+export async function redo() {
+  // Clear redo history if there is an untracked change
+  storeUndoDiff();
+
+  if (future.length === 0) return;
+  applyingDiff = true;
+
+  try {
+    const delta = future.pop()!;
+    past.push(delta);
+
+    let currentState = getSheetObject(false);
+    
+    diffEngine.patch(currentState, delta);
+    
+    lastSnapshot = currentState;
+    await applySheetObject(currentState);
+    await tick();
+  } finally {
+    applyingDiff = false;
+  }
 }
 
 
@@ -240,30 +403,14 @@ export function decrementActiveCell() {
   }
 }
 
-export function deleteCell(index: number, forceDelete=false) {
+export async function deleteCell(index: number) {
   let newCells: Cell[];
   let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
-  if (appState.cells[index].type !== "deleted" && 
-      appState.cells[index].type !== "insert" &&
-      !forceDelete) {
-    
-    const contentDiv = document.getElementById(`cell-${index}`);
-    let height = 0;
-    if (contentDiv) {
-      height = contentDiv.getBoundingClientRect().height;
-    }
-
-    newCells = [...appState.cells.slice(0,index), new DeletedCellClass(appState.cells[index], height), ...appState.cells.slice(index+1)];
-    newResults = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
-    newSystemResults = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
-  } else {
-    // user comfirming delete of an undo delete cell or a insert cell
-    newCells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
-    newResults = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
-    newSystemResults = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
-  }
+  newCells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
+  newResults = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
+  newSystemResults = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
 
   if (appState.activeCell >= newCells.length) {
     appState.activeCell = newCells.length-1;
@@ -274,6 +421,145 @@ export function deleteCell(index: number, forceDelete=false) {
   appState.system_results = newSystemResults;
 
   appState.resultsInvalid = true;
+  
+  await tick();
+
+  triggerSaveNeeded();
+  mathCellChanged();
+}
+
+export function mathCellChanged() {
+  appState.refreshCounter++;
+  appState.noParsingErrors = !(appState.cellListElement?.checkParsingErrors() ?? false);
+
+  appState.inDebounce = true;
+  debounceHandleCellUpdate(appState.refreshCounter, appState.populatingPage);
+}
+
+export function triggerSaveNeeded(pendingMathCellChange = false) {
+  if (pendingMathCellChange) {
+    appState.refreshCounter++;
+    appState.inDebounce = true;
+  }
+  
+  storeUndoDiff();
+
+  appState.unsavedChange = true;
+  appState.autosaveNeeded = true;
+}
+
+const debounceHandleCellUpdate = debounce(handleCellUpdate, debounceTime);
+
+async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetLoad: boolean) {
+  if (localRefreshCounter !== appState.refreshCounter) {
+    return;
+  }
+  const myRefreshCount = localRefreshCounter;
+  appState.inDebounce = false;
+  if(appState.noParsingErrors && !firstRunAfterSheetLoad) {
+    // invalidate results if all math fields are valid (while editing current cell)
+    // also, don't invalidate results if sheet was just loaded without modification (populatingPage === true)
+    appState.resultsInvalid = true;
+    appState.error = "";
+  }
+  await appState.pyodidePromise;
+  appState.pyodideTimeout = false;
+  if (appState.cellListElement && myRefreshCount === appState.refreshCounter && appState.noParsingErrors) {
+    const statementsAndSystemsObject = appState.cellListElement.getStatementsAndSystemsForPython()
+    clearTimeout(pyodideTimeoutRef);
+    pyodideTimeoutRef = window.setTimeout(() => appState.pyodideTimeout=true, pyodideTimeoutLength);
+    if (!firstRunAfterSheetLoad) {
+      appState.resultsInvalid = true;
+      appState.error = "";
+    }
+
+    let neededPyodidePackages: Set<string> = new Set();
+    if (statementsAndSystemsObject.fluidFunctions.length > 0) {
+      neededPyodidePackages.add('coolprop');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions.length > 0) {
+      neededPyodidePackages.add('numpy');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions
+          .reduce((accum, value) => accum || (value.numInputs > 1), false)) {
+      neededPyodidePackages.add('scipy');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions
+          .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
+      neededPyodidePackages.add('scikit-learn');
+    }
+
+    for (const codeCellFunction of statementsAndSystemsObject.codeCellFunctions) {
+      neededPyodidePackages = neededPyodidePackages.union(new Set(codeCellFunction.neededPyodidePackages));
+    }
+
+    appState.pyodidePromise = getResults(statementsAndSystemsObject,
+                                myRefreshCount, [...neededPyodidePackages])
+    .then((data: Results) => {
+      clearResults();
+      appState.resultsInvalid = false;
+      if (!data.error && data.results.length > 0) {
+        let counter = 0;
+        for (const [i, cell] of appState.cells.entries()) {
+          if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
+            appState.results[i] = data.results[counter++];
+          } else {
+            appState.results[i] = null;
+          }
+        }
+        while(counter < data.results.length) {
+          const currentResult = data.results[counter++];
+          if ("isSubResult" in currentResult && currentResult.isSubResult) {
+            appState.sub_results.set(currentResult.subQueryName, currentResult);
+          }
+        }
+      }
+      appState.error = data.error;
+      appState.system_results = [];
+      let counter = 0;
+      for (const [i, cell] of appState.cells.entries()) {
+        if (cell.type === "system") {
+          appState.system_results[i] = data.systemResults[counter++]
+        } else {
+          appState.system_results[i] = null;
+        }
+      }
+      if (!firstRunAfterSheetLoad) {
+        appState.autosaveNeeded = true;
+      }
+      appState.codeCellResults = data.codeCellResults ?? {};
+    })
+    .catch((errorMessage) => appState.error=errorMessage);
+  }
+}
+
+function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
+                    neededPyodidePackages: string[]) {
+  return new Promise<Results>((resolve, reject) => {
+    function handleWorkerMessage(e) {
+      appState.forcePyodidePromiseRejection = null;
+      if (e.data === "pyodide_not_available") {
+        // pyodide didn't load properly
+        reject("Pyodide failed to load.");
+      } else if (e.data === "max_recursion_exceeded") {
+        reject("Max recursion depth exceeded.")
+      } else {
+
+        if (myRefreshCount !== appState.refreshCounter) {
+          reject("Stale solution, re-solving. If this message persists, make an edit to trigger a recalculation.");
+        } else {
+          resolve(e.data);
+        }
+      }
+    }
+    appState.forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
+    appState.pyodideWorker.onmessage = handleWorkerMessage;
+    appState.pyodideWorker.postMessage({
+      cmd: 'sheet_solve',
+      data: $state.snapshot(statementsAndSystems),
+      neededPyodidePackages
+    });
+  });
 }
 
 export function dataTableToSelectorTable(index: number, dataTableData: DatabaseDataTableCell) {

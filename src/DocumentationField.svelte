@@ -4,6 +4,7 @@
   import ImageResize from "@mgreminger/quill-image-resize-module";
   import { MathfieldElement } from "mathlive";
   import { DOMPurify } from "./stores.svelte";
+  import { untrack } from "svelte";
 
   const BaseImageFormat = Quill.import('formats/image') as any;
 
@@ -134,28 +135,55 @@
 </script>
 
 <script lang="ts">
-  import type { Delta, Range } from "quill";
+  import { Delta, type Op, type Range } from "quill";
   import type { Blot } from "parchment";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
   interface Props {
     hideToolbar: boolean;
-    quill: Quill;
-    update: (arg: {detail: {delta: Delta}}) => void;
+    quill?: Quill;
+    ops: Op[];
+    update?: () => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
+    ops = $bindable(),
     update
   }: Props = $props();
-  
+
   let editorDiv;
+
+  // Tracker to prevent infinite loops when two-way binding Delta
+  let lastEmittedDelta: Op[] | null = null;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
   }
+
+  // React to changes in delta coming from the parent component
+  $effect(() => {
+    const incomingOps = ops;
+
+    if (!quill || !incomingOps) return;
+
+    // Skip if the change came from the user typing in the editor
+    if (incomingOps === lastEmittedDelta) return;
+
+    untrack(() => {
+      // Convert plain object/array back to a Quill Delta instance
+      const incomingDeltaInstance = new Delta(incomingOps);
+
+      // Skip if the external payload identically matches the editor state
+      const currentContents = quill.getContents();
+      if (currentContents.diff(incomingDeltaInstance).ops.length === 0) return;
+
+      // External change detected: safely apply it using the API source
+      quill.setContents(incomingDeltaInstance, 'api');
+    });
+  });
 
   onMount(() => {
     const bindings = {
@@ -258,8 +286,20 @@
       theme: 'snow'
     });
 
-    quill.on('text-change', (delta, oldDelta, source) => {
-      update({detail: {delta: quill.getContents()}});
+    // Populate initial value if parent component passes delta in on mount
+    if (ops) {
+      quill.setContents(ops, 'api');
+    }
+
+    quill.on('text-change', (d, oldDelta, source) => {
+      const currentContents = quill.getContents();
+      
+      // If the user made the change, update the binding and our tracker
+      if (source === 'user') {
+        lastEmittedDelta = currentContents.ops;
+        ops = currentContents.ops;
+        update?.();
+      }
     });
 
     quill.on('selection-change', (range) => {
