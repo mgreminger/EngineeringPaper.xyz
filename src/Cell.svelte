@@ -13,7 +13,6 @@
   import SystemCellElement from "./SystemCell.svelte";
   import FluidCellElement from "./FluidCell.svelte";
   import CodeCellElement from "./CodeCell.svelte";
-  import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
   import ImportCellElement from "./ImportCell.svelte";
   import PageBreakCellElement from "./PageBreakCell.svelte";
@@ -25,7 +24,6 @@
   import DocumentationCell from "./cells/DocumentationCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
-  import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
@@ -69,7 +67,7 @@
   // svelte-ignore non_reactive_update
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
-                   SystemCellElement | DeletedCellElement | InsertCellElement |
+                   SystemCellElement | InsertCellElement |
                    FluidCellElement | DataTableCellElement | ImportCellElement |
                    PageBreakCellElement;
 
@@ -119,10 +117,6 @@
   }
 
   onMount(() => {
-    if(cell instanceof DeletedCell && cell.height > 0) {
-      contentDiv.setAttribute("style", `height: ${cell.height}px;`);
-    }
-
     dragHandleElement.addEventListener("touchstart", dispatchStartDrag, {passive: false});
   });
 
@@ -354,14 +348,6 @@
         index={index}
         codeCell={cell}
       />
-    {:else if cell instanceof DeletedCell}
-      <DeletedCellElement
-        bind:this={cellElement}
-        index={index}
-        deletedCell={cell}
-        {mathCellChanged}
-        {triggerSaveNeeded}
-      />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         {insertSheet}
@@ -387,7 +373,7 @@
   <div class="controls right">
     <IconButton
       id={`delete-${index}`}
-      click={() => {deleteCell(index); triggerSaveNeeded(); mathCellChanged();}}
+      click={() => {deleteCell(index)}}
       title="Delete Cell"
     >
       <TrashCan />

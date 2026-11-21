@@ -218,7 +218,7 @@
     }
   })
 
-  function handleKeydown(e: KeyboardEvent) {
+  async function handleKeydown(e: KeyboardEvent) {
     if (e.defaultPrevented) {
       return;
     }
@@ -246,9 +246,7 @@
           return;
         } else {
           if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
-            deleteCell(appState.activeCell);
-            triggerSaveNeeded();
-            mathCellChanged();
+            await deleteCell(appState.activeCell);
           }
         }
         break;

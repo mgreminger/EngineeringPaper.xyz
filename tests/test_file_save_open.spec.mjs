@@ -8,8 +8,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   // retrieve a previously saved document from database and check screenshot
@@ -454,8 +453,7 @@ test('Test opening .pro sheet with an import cell', async ({ page, browserName }
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   await page.goto('/');

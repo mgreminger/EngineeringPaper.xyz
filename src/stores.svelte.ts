@@ -16,7 +16,6 @@ import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
 import CodeCell from './cells/CodeCell.svelte';
 import PlotCell from './cells/PlotCell.svelte';
-import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 import ImportCell from './cells/ImportCell.svelte';
 import PageBreakCell from './cells/PageBreakCell';
@@ -398,30 +397,14 @@ export function decrementActiveCell() {
   }
 }
 
-export function deleteCell(index: number, forceDelete=false) {
+export async function deleteCell(index: number) {
   let newCells: Cell[];
   let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
-  if (appState.cells[index].type !== "deleted" && 
-      appState.cells[index].type !== "insert" &&
-      !forceDelete) {
-    
-    const contentDiv = document.getElementById(`cell-${index}`);
-    let height = 0;
-    if (contentDiv) {
-      height = contentDiv.getBoundingClientRect().height;
-    }
-
-    newCells = [...appState.cells.slice(0,index), new DeletedCellClass(appState.cells[index], height), ...appState.cells.slice(index+1)];
-    newResults = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
-    newSystemResults = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
-  } else {
-    // user comfirming delete of an undo delete cell or a insert cell
-    newCells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
-    newResults = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
-    newSystemResults = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
-  }
+  newCells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
+  newResults = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
+  newSystemResults = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
 
   if (appState.activeCell >= newCells.length) {
     appState.activeCell = newCells.length-1;
@@ -432,6 +415,11 @@ export function deleteCell(index: number, forceDelete=false) {
   appState.system_results = newSystemResults;
 
   appState.resultsInvalid = true;
+  
+  await tick();
+
+  triggerSaveNeeded();
+  mathCellChanged();
 }
 
 export function mathCellChanged() {

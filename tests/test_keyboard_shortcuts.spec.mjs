@@ -18,7 +18,6 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // don't use forceCellDelete function here since we need to test deleting the undo cell at least once
   await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click(); // delete twice to delete the undo cell
 
   // add math cell with shift-Enter keyboard shortcut with now no cell selected
   await page.keyboard.press('Shift+Enter');
@@ -44,18 +43,12 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
   let content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
 
-  // make sure delete undo works
+  // move up one cell
   await page.keyboard.press(modifierKey+"+ArrowUp");
-  await page.keyboard.press(modifierKey+"+D");
-  await page.locator('text=Undo Delete', {timeout: 1000}).click({force: true});
 
+  // use control D to delete current cell
+  await page.keyboard.press(modifierKey+"+D");
   await page.waitForSelector('.status-footer', { state: 'detached' });
-  content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
-
-  // use control D to delete and let timer count down to delete
-  await page.keyboard.press(modifierKey+"+D");
-  await page.locator('text=Undo Delete').waitFor({state: "detached"});
 
   // insert math cell using modifier-Enter
   await page.keyboard.press(modifierKey+"+Enter");
@@ -76,7 +69,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // test double modifier-D to delete cell
   await page.keyboard.press(modifierKey+"+D");
-  await page.keyboard.press(modifierKey+"+D");
+  await page.waitForSelector('.status-footer', { state: 'detached' });
 
   // test add system solve cell with insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
@@ -120,9 +113,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // delete piecewise and plot with errors 
   await page.keyboard.press(modifierKey+"+D");
-  await page.keyboard.press(modifierKey+"+D");
   await page.keyboard.press(modifierKey+"+ArrowUp")
-  await page.keyboard.press(modifierKey+"+D");
   await page.keyboard.press(modifierKey+"+D");
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -201,45 +192,6 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(1010002, precision);
-
-});
-
-
-test('Test esc to undo delete', async ({ browserName }) => {
-
-  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
-  await page.locator('#cell-0 >> math-field.editable').type("x+y=");
-  await page.keyboard.press('Enter');
-  await page.locator('#cell-1 >> math-field.editable').type("x=1");
-  await page.keyboard.press('Enter');
-  await page.locator('#cell-2 >> math-field.editable').type("y=2");
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent(`#result-value-0`);
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
-  
-  // test undo delete using escape when delete triggered using keyboard shortcut
-  await page.locator('#cell-1 >> math-field.editable').click();
-  await expect(page.locator('#cell-1 >> math-field.editable')).toBeFocused();
-  await page.keyboard.press(modifierKey+'+D');
-  await expect(page.locator('text=Undo Delete')).toBeVisible();
-  await page.keyboard.press('Escape');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent(`#result-value-0`);
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
-
-  // test undo delete using escape when delete triggered using button
-  await page.locator('#cell-1 >> math-field.editable').click();
-  await expect(page.locator('#cell-1 >> math-field.editable')).toBeFocused();
-  await page.click('#delete-1');
-  await expect(page.locator('text=Undo Delete')).toBeVisible();
-  await page.keyboard.press('Escape');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent(`#result-value-0`);
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 
 });
 

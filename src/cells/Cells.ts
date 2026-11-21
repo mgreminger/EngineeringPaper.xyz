@@ -9,13 +9,12 @@ import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";
 import FluidCell from "./FluidCell.svelte";
 import CodeCell from "./CodeCell.svelte";
-import type DeletedCell from "./DeletedCell";
 import type InsertCell from "./InsertCell";
 import ImportCell from "./ImportCell.svelte";
 import PageBreakCell from "./PageBreakCell";
 
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
-                   PiecewiseCell | SystemCell | DeletedCell | InsertCell | DataTableCell |
+                   PiecewiseCell | SystemCell | InsertCell | DataTableCell |
                    CodeCell | ImportCell | PageBreakCell;
 
 export async function cellFactory(databaseCell: DatabaseCell, config: Config): 

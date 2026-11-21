@@ -218,15 +218,6 @@
   // time it is requested.
   (window as any).forceNoUnsavedChange = () => {appState.unsavedChange = false;};
 
-  // Used for testing to simplify the deleting of cells
-  // The two-step delete, delete and then delete the undo delete cell, 
-  // can be flaky for firefox and webkit
-  // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
-  (window as any).forceDeleteCell = (index: number) => {
-                                                          deleteCell(index, true);
-                                                          mathCellChanged();
-                                                        }
-
   let pyodideLoaded: boolean = $state();
   let pyodideNotAvailable: boolean = $state();
   let pyodideLoadingTimeoutRef = 0;
@@ -533,7 +524,7 @@
     modalInfo = event.detail.modalInfo;
   }
 
-  function handleKeyboardShortcuts(event: KeyboardEvent) {
+  async function handleKeyboardShortcuts(event: KeyboardEvent) {
     if (event.defaultPrevented) {
       return;
     }
@@ -561,9 +552,7 @@
           return;
         } else {
           if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
-            deleteCell(appState.activeCell);
-            triggerSaveNeeded();
-            mathCellChanged();
+            await deleteCell(appState.activeCell);
           }
         }
         break;

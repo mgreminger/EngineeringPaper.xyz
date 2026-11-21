@@ -12,8 +12,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
   }
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   // const width = 900; // needs to be wider since webkit is not scrolling enough for some clicks

@@ -38,8 +38,7 @@ export async function loadPyodide(browser, page) {
   }
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   // reducing animations speeds up tests
