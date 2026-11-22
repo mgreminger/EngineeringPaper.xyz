@@ -257,20 +257,22 @@ export async function resetSheet() {
   }
 
   appState.config = defaultConfig;
-  appState.cells = [];
-  appState.title = defaultTitle;
-  appState.results = [];
-  appState.resultsInvalid = true;
-  appState.system_results = [];
-  appState.sub_results = new Map();
   BaseCell.nextId = 0;
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;
   DataTableCell.nextPolyfitDefId = 1;
   CodeCell.nextFuncId = 1;
+
+  appState.cells = [new MathCell];
+  appState.title = defaultTitle;
+  appState.results = [null];
+  appState.resultsInvalid = true;
+  appState.system_results = [null];
+  appState.sub_results = new Map();
+
   appState.history = [];
   appState.insertedSheets = [];
-  appState.activeCell = 0;
+  appState.activeCell = 1;
   appState.sheetId = window.crypto.randomUUID();
 
   resetSheetUndoHistory();
@@ -353,6 +355,8 @@ export async function undo() {
     lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
+
+    console.log(`appState.past.length=${past.length}`);
   } finally {
     applyingDiff = false;
   }
@@ -376,6 +380,8 @@ export async function redo() {
     lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
+
+    console.log(`appState.past.length=${past.length}`);
   } finally {
     applyingDiff = false;
   }

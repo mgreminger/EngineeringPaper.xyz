@@ -748,7 +748,6 @@
     currentStateObject = null;
     await resetSheet();
     await tick();
-    await addCell('math');
     triggerSaveNeeded();
     mathCellChanged();
     await tick();
