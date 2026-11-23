@@ -8,7 +8,8 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState, { applySheetObject, debounceTime, redo, resetSheetUndoHistory, undo } from "./stores.svelte";
+  import appState, { applySheetObject, debounceTime, redo, 
+                     resetSheetUndoHistory, undo, markSaved } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject, clearResults,
            mathCellChanged, triggerSaveNeeded
@@ -332,9 +333,10 @@
     appState.prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
-    appState.unsavedChange = false;
-    appState.autosaveNeeded = false;
     await refreshSheet(true);
+
+    markSaved();
+    appState.autosaveNeeded = false;
 
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -751,7 +753,7 @@
     triggerSaveNeeded();
     mathCellChanged();
     await tick();
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
   }
 
@@ -889,7 +891,7 @@
         };
       }
 
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
 
       appState.history = responseObject.history;
@@ -970,14 +972,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
         heading: "Retrieving Sheet"
       };
       appState.cells = [];
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
 
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
 
     if (!inIframe && appState.cells.some(item => item instanceof CodeCell)) {
@@ -1273,7 +1275,7 @@ with the file that is not opening attached, if possible. </p>`,
       };
 
       appState.cells = [];
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
       return;
     }
@@ -1285,7 +1287,7 @@ with the file that is not opening attached, if possible. </p>`,
     }
 
     modalInfo.modalOpen = false;
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
 
     if (appState.cells.some(item => item instanceof CodeCell)) {
@@ -1790,7 +1792,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       saveFileBlob(fileData, `${appState.title}.epxyz`);
     }
 
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
   }
 

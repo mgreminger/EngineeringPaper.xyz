@@ -70,6 +70,11 @@ type AppState = {
   forcePyodidePromiseRejection: () => void;
 
   unsavedChange: boolean;
+  undoAvailable: boolean;
+  undoDescription: string
+  redoAvailable: boolean;
+  redoDescription: string;
+
   autosaveNeeded: boolean;
 
   config: Config;
@@ -126,6 +131,11 @@ export const appState: AppState = $state<AppState>({
   forcePyodidePromiseRejection: undefined,
 
   unsavedChange: false,
+  undoAvailable: false,
+  undoDescription: "",
+  redoAvailable: false,
+  redoDescription: "",
+
   autosaveNeeded: false,
 
   config: getDefaultConfig(),
@@ -303,60 +313,125 @@ export async function applySheetObject(sheet: Sheet) {
 }
 
 
-let past: Delta[] = [];
-let future: Delta[] = [];
+type UndoHistoryEntry = {
+  delta: Delta;
+  description: string;
+};
+
+const maxUndoEntries = 100;
+let unchangedUndoLength = 0;
+let past: UndoHistoryEntry[] = [];
+let future: UndoHistoryEntry[] = [];
 let lastSnapshot: Sheet | undefined;
 let applyingDiff = false;
+
+function updateUndoState() {
+  appState.unsavedChange = (past.length !== unchangedUndoLength);
+
+  if (past.length > 0) {
+    appState.undoAvailable = true;
+    appState.undoDescription = past[past.length-1].description;
+  } else {
+    appState.undoAvailable = false;
+    appState.undoDescription = "";
+  }
+
+  if (future.length > 0) {
+    appState.redoAvailable = true;
+    appState.redoDescription = future[future.length-1].description;
+  } else {
+    appState.redoAvailable = false;
+    appState.redoDescription = "";
+  }
+}
+
+export function markSaved() {
+  unchangedUndoLength = past.length;
+  appState.unsavedChange = false;
+}
 
 export function resetSheetUndoHistory() {
   past = [];
   future = [];
-  lastSnapshot = getSheetObject(false); 
+
+  // reset unchangedUndoLength to undefined, call markSaved() after to set unchangedUndoLength to 0
+  unchangedUndoLength = -1;
+
+  lastSnapshot = getSheetObject(false);
+
+  updateUndoState();
 }
 
 const diffEngine = create({
   arrays: { 
     // Disabling move detection makes array diffing exponentially faster (O(N) instead of O(N^2))
-    detectMove: false 
+    detectMove: false
   },
 });
 
-export function storeUndoDiff() {
+export function storeUndoDiff(description: string) {
   if (applyingDiff || !lastSnapshot) return;
   
   const currentSnapshot = getSheetObject(false);
 
-  const delta = diffEngine.diff(lastSnapshot, currentSnapshot);
+  let delta: Delta | undefined;
+  try {
+    delta = diffEngine.diff(lastSnapshot, currentSnapshot);
+  } catch (error) {
+    console.warn(`Error creating undo diff: ${error}`)
+    resetSheetUndoHistory();
+  }
 
   // jsondiffpatch returns undefined if the objects are exactly identical
   if (delta) {
-    past.push(delta);
+    // If the saved state was in the future we are about to overwrite, destroy the pointer
+    if (unchangedUndoLength > past.length) {
+      unchangedUndoLength = -1;
+    }
+
+    past.push({delta, description});
+
+    if (past.length > maxUndoEntries) {
+      past.shift();
+      unchangedUndoLength--;
+    }
+
     console.log(`appState.past.length=${past.length}`);
     future = []; 
     lastSnapshot = currentSnapshot;
+    
+    updateUndoState();
   }
 }
 
 export async function undo() {
   // Capture any dangling unsaved changes before attempting undo
-  storeUndoDiff();
+  storeUndoDiff("Untracked Sheet Edit");
 
-  if (past.length === 0) return;
+  if (past.length === 0) {
+    return;
+  }
+
   applyingDiff = true;
 
   try {
-    const delta = past.pop()!;
-    future.push(delta);
+    const undoEntry = past.pop()!;
+    future.push(undoEntry);
 
     let currentState = getSheetObject(false);
     
-    diffEngine.unpatch(currentState, delta);
+    diffEngine.unpatch(currentState, undoEntry.delta);
     
     lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
 
     console.log(`appState.past.length=${past.length}`);
+
+    updateUndoState();
+  } catch (error) {
+    console.warn(`Error applying undo diff: ${error}`)
+    resetSheetUndoHistory();
   } finally {
     applyingDiff = false;
   }
@@ -364,24 +439,32 @@ export async function undo() {
 
 export async function redo() {
   // Clear redo history if there is an untracked change
-  storeUndoDiff();
+  storeUndoDiff("Untracked Sheet Edit");
 
-  if (future.length === 0) return;
+  if (future.length === 0) {
+    return;
+  }
+
   applyingDiff = true;
 
   try {
-    const delta = future.pop()!;
-    past.push(delta);
+    const redoEntry = future.pop()!;
+    past.push(redoEntry);
 
     let currentState = getSheetObject(false);
     
-    diffEngine.patch(currentState, delta);
+    diffEngine.patch(currentState, redoEntry.delta);
     
     lastSnapshot = currentState;
     await applySheetObject(currentState);
     await tick();
 
     console.log(`appState.past.length=${past.length}`);
+
+    updateUndoState();
+  } catch (error) {
+    console.warn(`Error applying redo diff: ${error}`)
+    resetSheetUndoHistory();
   } finally {
     applyingDiff = false;
   }
@@ -448,7 +531,7 @@ export function triggerSaveNeeded(pendingMathCellChange = false) {
     appState.inDebounce = true;
   }
   
-  storeUndoDiff();
+  storeUndoDiff("Sheet Edit");
 
   appState.unsavedChange = true;
   appState.autosaveNeeded = true;
