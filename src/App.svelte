@@ -63,10 +63,10 @@
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
   import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
-  import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
+  import Undo from "carbon-icons-svelte/lib/Undo.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
-  import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
+  import Redo from "carbon-icons-svelte/lib/Redo.svelte";
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
   import Download from "carbon-icons-svelte/lib/Download.svelte";
@@ -2240,6 +2240,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     padding-right: 0px;
   }
 
+  :global(.bx--btn--disabled) {
+    background: none !important;
+    border-color: transparent !important;
+  }
+
   div.side-nav-title {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2538,12 +2543,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleFileOpen}
           icon={Document}
         />
-        <HeaderGlobalAction
-          id="save-sheet"
-          iconDescription="Save Sheet to File in Various Formats"
-          on:click={loadSaveSheetModal}
-          icon={Download}
-        />
+        <div class="dot-container">
+          <HeaderGlobalAction
+            id="save-sheet"
+            iconDescription={"Save Sheet to File in Various Formats" + (appState.unsavedChange ? " (Save Needed)" : "")}
+            on:click={loadSaveSheetModal}
+            icon={Download}
+          />
+          {#if appState.unsavedChange}
+            <div class="dot"></div>
+          {/if}
+        </div>
         <HeaderGlobalAction
           id="upload-sheet"
           iconDescription="Get Shareable Link"
@@ -2570,17 +2580,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
         </div>
         <HeaderGlobalAction
-          iconDescription="Supported Units"
+          iconDescription={`Undo ${appState.undoDescription}`}
           tooltipAlignment="end"
-          on:click={handleUnitsModal}
-          icon={Ruler}
+          disabled={!appState.undoAvailable}
+          on:click={undo}
+          icon={Undo}
         />
         <HeaderGlobalAction 
           class="hide-when-narrow" 
-          iconDescription="Keyboard Shortcuts"
+          iconDescription={`Redo ${appState.redoDescription}`}
           tooltipAlignment="end"
-          on:click={handleKeyboardShortcutsModal}
-          icon={Keyboard}
+          disabled={!appState.redoAvailable}
+          on:click={redo}
+          icon={Redo}
         />
         <HeaderGlobalAction 
           iconDescription="Try the Desktop App"
@@ -2611,6 +2623,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           href={`${window.location.origin}/docs/ep_quick_reference.pdf`}
           text="Quick Reference Guide"
           target="_blank"
+        />
+        <SideNavLink 
+          on:click={handleUnitsModal}
+          text="Supported Units"
+        />
+        <SideNavLink 
+          on:click={handleKeyboardShortcutsModal}
+          text="Keyboard Shortcuts"
         />
         <SideNavMenu text="Example Sheets">
           {#each exampleSheets as {path, title} (path)}
