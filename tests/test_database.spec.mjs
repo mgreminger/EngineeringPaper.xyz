@@ -71,7 +71,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.waitForTimeout(400); // time it takes quill toolbar to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot1.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot1.png`, fullPage: true });
 
   // Try to save page again, should return the same link as before
   await page.click('#upload-sheet');
@@ -125,7 +125,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.locator('h1 >> text=Title for testing purposes only').click(); // make sure mouse is not over plot otherwise toolbar appears
   await page.keyboard.press('Escape'); // unselect title
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot2.png`, fullPage: true });
 
   // reload the first document through a hash update
   await page.evaluate(hash => {
@@ -147,7 +147,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot1_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot1.png`, `${browserName}_screenshot1_check.png`)).toEqual(0);
 
@@ -162,7 +162,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot2_check.png`, fullPage: true });
 
   if (browserName === "firefox") {
     // firefox has issues rendering latex for the legend labels
@@ -189,7 +189,7 @@ test('Test database consistency', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_reference_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot_reference_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_reference.png`, `${browserName}_screenshot_reference_check.png`)).toEqual(0);
 });
@@ -272,7 +272,7 @@ test('Test presistance of equations and image resize in documentation fields', a
   await page.waitForTimeout(400); // time it takes quill toolbar to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot4.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot4.png`, fullPage: true });
 
   // reload the document
   await page.goto(`/${sheetUrl1.pathname.slice(1)}`);
@@ -282,7 +282,7 @@ test('Test presistance of equations and image resize in documentation fields', a
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot4_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot4_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot4.png`, `${browserName}_screenshot4_check.png`)).toEqual(0);
 });
@@ -342,7 +342,7 @@ test('Test svg image in documentation cell', async ({ page, browserName }) => {
   await page.waitForTimeout(400); // time it takes quill toolbar to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot5.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot5.png`, fullPage: true });
 
   // reload the document
   await page.goto(`/${sheetUrl1.pathname.slice(1)}`);
@@ -352,7 +352,7 @@ test('Test svg image in documentation cell', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot5_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot5_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot5.png`, `${browserName}_screenshot5_check.png`)).toEqual(0);
 });

@@ -524,7 +524,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_solve_screenshot.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_solve_screenshot.png`, fullPage: true });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -537,7 +537,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_solve_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_solve_screenshot_check.png`, fullPage: true });
 
   // webkit cannot reproduce pixel perfect on this one
   // (seems like the exponent rendering changes slightly for webkit)
