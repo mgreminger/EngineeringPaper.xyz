@@ -2646,7 +2646,7 @@ test('Test convert data table to selector table', async () => {
   expect(content).toBe('Temp');
 
   // Undo the selector table conversion
-  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.locator('#cell-4 >> button >> text=Undo').click();
 
   await page.waitForSelector('div.status-footer', {state: 'detached'});
 
@@ -2781,7 +2781,7 @@ test('Test convert data table to slector table with calculation column', async (
   expect(content).toBe('m^2');
 
   // make sure undo conversion works for calculated column
-  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.locator('#cell-2 >> button >> text=Undo').click();
 
   await page.waitForSelector('div.status-footer', {state: 'detached'});
 
