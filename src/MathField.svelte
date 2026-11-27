@@ -25,6 +25,7 @@
     shiftEnter?: () => void;
     modifierEnter?: () => void;
     update?: () => void;
+    commit?: () => void;
     dataTableInfo?: DataTableInfo;
   }
 
@@ -53,12 +54,14 @@
     shiftEnter,
     modifierEnter,
     update,
+    commit,
     dataTableInfo
   }: Props = $props();
 
   const id = appState.nextParserId++;
   let mathLiveField: MathfieldElement = $state();
   let lastKnownLatex = "";
+  let isDirty = false;
   let pendingNewLatex = false;
   let newLatex:string;
   let parsingPromise: Promise<ParsingResult>;
@@ -68,6 +71,7 @@
     if (pendingNewLatex && mathLiveField) {
 
       let startingPosition = mathLiveField.position;
+      isDirty = true;
       latex = newLatex;
 
       await tick();
@@ -99,6 +103,7 @@
   }
 
   function handleMathFieldUpdate(e?: Event) {
+    isDirty = true;
     lastKnownLatex = mathLiveField.value;
     latex = mathLiveField.value;
   } 
@@ -194,17 +199,20 @@
     appState.activeMathField = mathLiveField;
   }
 
-  function handleFocusOut() {
+  async function handleFocusOut() {
     if (mathLiveField && !mathLiveField.hasFocus()) {
       appState.activeMathField = null;
 
-      if (mathLiveField) {
-        setPendingLatex();
+      if (parsingState.parsingError) {
+        // there is a parsing error, invalidate existing results after leaving cell
+        appState.resultsInvalid = true;
+      }
 
-        if (parsingState.parsingError) {
-          // there is a parsing error, invalidate existing results after leaving cell
-          appState.resultsInvalid = true;
-        }
+      await setPendingLatex();
+
+      if (isDirty && mathLiveField?.isConnected) {
+        isDirty = false;
+        commit?.();
       }
     }
   }
@@ -336,6 +344,12 @@
 
   $effect(() => {
     if (mathLiveField && latex !== lastKnownLatex) {
+      if (!pendingNewLatex) {
+        isDirty = false;
+        if (editable) {
+          mathLiveField.resetUndo();
+        }
+      }
       mathLiveField.value = latex;
       lastKnownLatex = latex;
     }

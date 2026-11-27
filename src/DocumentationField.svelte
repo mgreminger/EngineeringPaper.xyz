@@ -145,22 +145,47 @@
     quill?: Quill;
     ops: Op[];
     update?: () => void;
+    commit?: () => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
     ops = $bindable(),
-    update
+    update,
+    commit
   }: Props = $props();
 
-  let editorDiv;
+  let editorDiv: HTMLDivElement;
+  let isDirty = false;
 
   // Tracker to prevent infinite loops when two-way binding Delta
   let lastEmittedDelta: Op[] | null = null;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
+  }
+
+  function handleFocusOut(e: FocusEvent) {
+    const wrapper = e.currentTarget as HTMLElement;
+    const nextFocused = e.relatedTarget as Node | null;
+
+    // Ignore focus moving internally (e.g., into the formula/link tooltip or toolbar)
+    if (nextFocused && wrapper.contains(nextFocused)) {
+      return;
+    }
+
+    // Defer briefly in case clicking a non-focusable toolbar button temporarily sets relatedTarget to null
+    queueMicrotask(() => {
+      if (!wrapper.isConnected || wrapper.contains(document.activeElement)) {
+        return;
+      }
+
+      if (isDirty) {
+        isDirty = false;
+        commit?.();
+      }
+    });
   }
 
   // React to changes in delta coming from the parent component
@@ -180,8 +205,10 @@
       const currentContents = quill.getContents();
       if (currentContents.diff(incomingDeltaInstance).ops.length === 0) return;
 
-      // External change detected: safely apply it using the API source
+      // External change detected: safely apply it using the API source and clear local history/dirty state
+      isDirty = false;
       quill.setContents(incomingDeltaInstance, 'api');
+      quill.history.clear();
     });
   });
 
@@ -289,13 +316,15 @@
     // Populate initial value if parent component passes delta in on mount
     if (ops) {
       quill.setContents(ops, 'api');
+      quill.history.clear();
     }
 
     quill.on('text-change', (d, oldDelta, source) => {
       const currentContents = quill.getContents();
       
-      // If the user made the change, update the binding and our tracker
-      if (source === 'user') {
+      // Capture user edits and internal Quill history undo/redo ('user' or 'silent'), ignoring external 'api' syncs
+      if (source !== 'api') {
+        isDirty = true;
         lastEmittedDelta = currentContents.ops;
         ops = currentContents.ops;
         update?.();
@@ -511,8 +540,9 @@
 
 
 <div
-  class="quill-wrapper" 
-  class:hideToolbar 
+  class="quill-wrapper"
+  class:hideToolbar
+  onfocusout={handleFocusOut}
 >
   <div class="editor" bind:this={editorDiv}></div>
 </div>

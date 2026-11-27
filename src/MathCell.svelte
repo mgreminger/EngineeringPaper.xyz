@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import appState, { addCell, DOMPurify, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
+  import appState, { addCell, DOMPurify, triggerSaveNeeded, mathCellChanged, storeUndoDiff } from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type MatrixResult, isMatrixResult,
            isMathCellResult,
@@ -670,6 +670,7 @@
     bind:this={mathField}
     bind:latex={mathCell.latex}
     enter={handleEnter}
+    commit={() => storeUndoDiff("Edit Math Cell")}
   />
   {#if parsingState.parsingError}
     {#if !parsingState.parsePending}

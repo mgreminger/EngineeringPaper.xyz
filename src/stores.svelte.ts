@@ -406,7 +406,7 @@ export function storeUndoDiff(description: string) {
 
 export async function undo() {
   // Capture any dangling unsaved changes before attempting undo
-  storeUndoDiff("Untracked Sheet Edit");
+  storeUndoDiff("Sheet Edit");
 
   if (past.length === 0) {
     return;
@@ -439,7 +439,7 @@ export async function undo() {
 
 export async function redo() {
   // Clear redo history if there is an untracked change
-  storeUndoDiff("Untracked Sheet Edit");
+  storeUndoDiff("Sheet Edit");
 
   if (future.length === 0) {
     return;
@@ -530,8 +530,6 @@ export function triggerSaveNeeded(pendingMathCellChange = false) {
     appState.refreshCounter++;
     appState.inDebounce = true;
   }
-  
-  storeUndoDiff("Sheet Edit");
 
   appState.unsavedChange = true;
   appState.autosaveNeeded = true;

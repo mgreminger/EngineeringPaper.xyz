@@ -1,7 +1,7 @@
 <script lang="ts">
   import { deltaToMarkdown } from "quill-delta-to-markdown";
 
-  import appState, { restoreDataTable, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
+  import appState, { restoreDataTable, triggerSaveNeeded, mathCellChanged, storeUndoDiff } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -444,6 +444,7 @@
         hideToolbar={hideToolbar}
         bind:ops={tableCell.rowOpsArray[tableCell.selectedRow]}
         update={triggerSaveNeeded}
+        commit={() => storeUndoDiff("Edit Row Documentation")}
       />
     {/key}
   </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Quill from "quill";
-  import appState from "./stores.svelte";
+  import appState, { storeUndoDiff } from "./stores.svelte";
   import { triggerSaveNeeded } from './stores.svelte';
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
@@ -66,5 +66,6 @@
     bind:quill={richTextInstance}
     bind:ops={documentationCell.ops}
     update={triggerSaveNeeded}
+    commit={() => storeUndoDiff("Edit Documentation Cell")}
   />
 </div>
