@@ -1,4 +1,4 @@
-import type { Delta } from "quill";
+import type { Delta, Op } from "quill";
 import type { MathCellConfig, FluidConfig, NumberFormatOptions } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
@@ -30,7 +30,7 @@ export type DatabasePlotCell = {
 export type DatabaseDocumentationCell = {
   type: "documentation",
   id: number,
-  json: Delta
+  json: Op[] | Delta
 }
 
 export type DatabaseTableCell = {
@@ -44,7 +44,7 @@ export type DatabaseTableCell = {
   rhsLatexs: string[][],
   selectedRow: number,
   hideUnselected: boolean,
-  rowJsons: Delta[]
+  rowJsons: Op[][] | Delta
 }
 
 // Original interpolation definition

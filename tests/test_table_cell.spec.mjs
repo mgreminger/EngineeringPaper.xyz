@@ -353,7 +353,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_table_screenshot.png`, fullPage: false });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -366,7 +366,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot_check.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_table_screenshot_check.png`, fullPage: false });
 
   expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot_check.png`)).toEqual(0);
 
@@ -413,7 +413,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_table_screenshot2.png`, fullPage: false });
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl2.pathname}`);
@@ -423,7 +423,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2_check.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_table_screenshot2_check.png`, fullPage: false });
 
   expect(compareImages(`${browserName}_table_screenshot2.png`, `${browserName}_table_screenshot2_check.png`)).toEqual(0);
 
@@ -459,7 +459,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot3.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_table_screenshot3.png`, fullPage: false });
 
   expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot3.png`)).toEqual(0);
 

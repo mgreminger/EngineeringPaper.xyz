@@ -1,28 +1,18 @@
 import { BaseCell, type DatabaseDocumentationCell } from "./BaseCell";
-import Quill, { Delta } from "quill";
-
-class DocumentationField {
-  delta: Delta = $state();
-  richTextInstance: Quill | null = $state(null);
-
-  constructor (delta?: Delta) {
-    if (delta === undefined) {
-      delta = new Delta();
-    }
-    this.delta = delta;
-  }
-}
+import Quill, { Delta, type Op } from "quill";
 
 
 export default class DocumentationCell extends BaseCell {
-  documentationField: DocumentationField = $state();
+  ops: Op[] = $state();
 
   constructor (arg?: DatabaseDocumentationCell) {
     super("documentation", arg?.id);
     if (arg === undefined) {
-      this.documentationField = new DocumentationField();
+      this.ops = [];
     } else {
-      this.documentationField = new DocumentationField(arg.json);
+      // Old database entries used the whole Delta objects rather the the ops array
+      // Need to use the Delta constructor to handle both cases 
+      this.ops = new Delta(structuredClone(arg.json)).ops;
     }
   }
 
@@ -30,7 +20,7 @@ export default class DocumentationCell extends BaseCell {
     return {
       type: "documentation",
       id: this.id,
-      json: this.documentationField.delta
+      json: $state.snapshot(this.ops)
     };
   }
 }

@@ -8,8 +8,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   // retrieve a previously saved document from database and check screenshot
@@ -34,7 +33,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot_file_open_save.png`, fullPage: false });
 
   // save the sheet, need to use download event to get the file path that the browser uses
   const downloadPromise = page.waitForEvent('download');
@@ -68,7 +67,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`, fullPage: false });
+  await page.screenshot({ mask: [page.locator('header.bx--header')], path: `${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`, fullPage: false });
 
   expect(compareImages(`${browserName}_screenshot_file_open_save.png`, `${browserName}_screenshot_file_open_save_check.png`)).toEqual(0);
 
@@ -454,8 +453,7 @@ test('Test opening .pro sheet with an import cell', async ({ page, browserName }
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.forceDeleteCell = async function (index) {
-    await this.evaluate((index) => window.forceDeleteCell(index), index);
-    await this.waitForTimeout(200);
+    await this.locator(`#delete-${index}`).click();
   }
 
   await page.goto('/');
@@ -480,7 +478,7 @@ test('Test opening .pro sheet with an import cell', async ({ page, browserName }
   await expect(page.locator('text=Imported 2.epxyz')).toBeVisible();
 
   // delete the import cell
-  await page.forceDeleteCell(0);
+  await page.locator("#delete-0").click();
 
   // make sure results appear after import cell is deleted
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});

@@ -4,6 +4,7 @@
   import ImageResize from "@mgreminger/quill-image-resize-module";
   import { MathfieldElement } from "mathlive";
   import { DOMPurify } from "./stores.svelte";
+  import { untrack } from "svelte";
 
   const BaseImageFormat = Quill.import('formats/image') as any;
 
@@ -134,28 +135,82 @@
 </script>
 
 <script lang="ts">
-  import type { Delta, Range } from "quill";
+  import { Delta, type Op, type Range } from "quill";
   import type { Blot } from "parchment";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
   interface Props {
     hideToolbar: boolean;
-    quill: Quill;
-    update: (arg: {detail: {delta: Delta}}) => void;
+    quill?: Quill;
+    ops: Op[];
+    update?: () => void;
+    commit?: () => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
-    update
+    ops = $bindable(),
+    update,
+    commit
   }: Props = $props();
-  
-  let editorDiv;
+
+  let editorDiv: HTMLDivElement;
+  let isDirty = false;
+
+  // Tracker to prevent infinite loops when two-way binding Delta
+  let lastEmittedDelta: Op[] | null = null;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
   }
+
+  function handleFocusOut(e: FocusEvent) {
+    const wrapper = e.currentTarget as HTMLElement;
+    const nextFocused = e.relatedTarget as Node | null;
+
+    // Ignore focus moving internally (e.g., into the formula/link tooltip or toolbar)
+    if (nextFocused && wrapper.contains(nextFocused)) {
+      return;
+    }
+
+    // Defer briefly in case clicking a non-focusable toolbar button temporarily sets relatedTarget to null
+    queueMicrotask(() => {
+      if (!wrapper.isConnected || wrapper.contains(document.activeElement)) {
+        return;
+      }
+
+      if (isDirty) {
+        isDirty = false;
+        commit?.();
+      }
+    });
+  }
+
+  // React to changes in delta coming from the parent component
+  $effect(() => {
+    const incomingOps = ops;
+
+    if (!quill || !incomingOps) return;
+
+    // Skip if the change came from the user typing in the editor
+    if (incomingOps === lastEmittedDelta) return;
+
+    untrack(() => {
+      // Convert plain object/array back to a Quill Delta instance
+      const incomingDeltaInstance = new Delta(incomingOps);
+
+      // Skip if the external payload identically matches the editor state
+      const currentContents = quill.getContents();
+      if (currentContents.diff(incomingDeltaInstance).ops.length === 0) return;
+
+      // External change detected: safely apply it using the API source and clear local history/dirty state
+      isDirty = false;
+      quill.setContents(incomingDeltaInstance, 'api');
+      quill.history.clear();
+    });
+  });
 
   onMount(() => {
     const bindings = {
@@ -258,8 +313,22 @@
       theme: 'snow'
     });
 
-    quill.on('text-change', (delta, oldDelta, source) => {
-      update({detail: {delta: quill.getContents()}});
+    // Populate initial value if parent component passes delta in on mount
+    if (ops) {
+      quill.setContents(ops, 'api');
+      quill.history.clear();
+    }
+
+    quill.on('text-change', (d, oldDelta, source) => {
+      const currentContents = quill.getContents();
+      
+      // Capture user edits and internal Quill history undo/redo ('user' or 'silent'), ignoring external 'api' syncs
+      if (source !== 'api') {
+        isDirty = true;
+        lastEmittedDelta = currentContents.ops;
+        ops = currentContents.ops;
+        update?.();
+      }
     });
 
     quill.on('selection-change', (range) => {
@@ -471,8 +540,9 @@
 
 
 <div
-  class="quill-wrapper" 
-  class:hideToolbar 
+  class="quill-wrapper"
+  class:hideToolbar
+  onfocusout={handleFocusOut}
 >
   <div class="editor" bind:this={editorDiv}></div>
 </div>

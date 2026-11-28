@@ -1,32 +1,25 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick, untrack } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import { type Cell, cellFactory } from "./cells/Cells";
+  import { cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell.svelte";
-  import TableCell from "./cells/TableCell.svelte";
-  import DataTableCell, { type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
+  import DataTableCell from "./cells/DataTableCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
-  import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
-  import FluidCell from "./cells/FluidCell.svelte";
-  import ImportCell from "./cells/ImportCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState from "./stores.svelte";
+  import appState, { applySheetObject, debounceTime, redo, 
+                     resetSheetUndoHistory, undo, markSaved } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
-           resetSheet, getSheetJson, getSheetObject, clearResults } from "./stores.svelte";
-  import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
-  import type { Statement, SubQueryStatement } from "./parser/types";
-  import type { SystemDefinition } from "./cells/SystemCell.svelte";
-  import type { FluidFunction } from "./cells/FluidCell.svelte";
-  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
-  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits, checkPyodideRuntime } from "./utility";
-  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
-  import type { Results } from "./resultTypes";
+           resetSheet, getSheetJson, getSheetObject, clearResults,
+           mathCellChanged, triggerSaveNeeded
+          } from "./stores.svelte";
+  import { isDefaultConfig, normalizeConfig, type MathCellConfig, type Sheet } from "./sheet/Sheet";
+  import { isVisible, versionToDateString, saveFileBlob, sleep, createCustomUnits, checkPyodideRuntime, getConversionFactor } from "./utility";
+  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
   import CellList from "./CellList.svelte"; 
-  import type { MathField } from "./cells/MathField.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
@@ -70,10 +63,10 @@
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
   import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
-  import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
+  import Undo from "carbon-icons-svelte/lib/Undo.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
-  import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
+  import Redo from "carbon-icons-svelte/lib/Redo.svelte";
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
   import Download from "carbon-icons-svelte/lib/Download.svelte";
@@ -87,13 +80,15 @@
 
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
   import NumberFormatOptionsDialog from "./NumberFormatOptionsDialog.svelte";
-  import type MathCellElement from "./MathCell.svelte";
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
-  import { getBlankStatement } from "./parser/utility";
   import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
+  import type { MathfieldElement } from "mathlive";
+  import { isDataTableResult, isMatrixResult, type FiniteImagResult, type MatrixResult, type RenderResult, type Result } from "./resultTypes";
+  import { unit } from "mathjs";
+  import type { CodeFunctionQueryStatement } from "./parser/types";
 
   createCustomUnits();
 
@@ -198,21 +193,21 @@
   (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
     const cell = appState.cells[cellIndex];
     if ( cell instanceof MathCell) {
-      cell.mathField.element.setLatex(latex);
+      cell.latex = latex;
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
-        cell.expressionFields[subIndex].element.setLatex(latex);
+        cell.expressionLatexs[subIndex] = latex;
       }
     } else if (cell instanceof PlotCell) {
       if (subIndex !== undefined) {
-        cell.mathFields[subIndex].element.setLatex(latex);
+        cell.latexs[subIndex] = latex;
       }
     } else if (cell instanceof DataTableCell) {
       if (subIndex !== undefined) {
-        cell.parameterFields[subIndex].element.setLatex(latex);
+        cell.parameterLatexs[subIndex] = latex;
       }
     } else if (cell instanceof CodeCell) {
-      cell.mathField.element.setLatex(latex);
+      cell.latex = latex;
     }
   };
 
@@ -224,28 +219,10 @@
   // time it is requested.
   (window as any).forceNoUnsavedChange = () => {appState.unsavedChange = false;};
 
-  // Used for testing to simplify the deleting of cells
-  // The two-step delete, delete and then delete the undo delete cell, 
-  // can be flaky for firefox and webkit
-  // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
-  (window as any).forceDeleteCell = (index: number) => {
-                                                          deleteCell(index, true);
-                                                          mathCellChanged();
-                                                        }
-
-  let pyodideWorker;
-  let pyodideTimeout = $state(false);
-  let pyodideTimeoutRef = 0;
   let pyodideLoaded: boolean = $state();
   let pyodideNotAvailable: boolean = $state();
-  let forcePyodidePromiseRejection;
-  let pyodidePromise: Promise<Boolean> | null = $state(null);
   let pyodideLoadingTimeoutRef = 0;
-  const pyodideTimeoutLength = 2000;
   const pyodideLoadingTimeoutLength = 60000;
-  let error: string | null = $state(null);
-  let noParsingErrors = $state(true);
-  let inDebounce = $state(false);
 
   let usingDefaultConfig = $derived(isDefaultConfig(appState.config));
 
@@ -255,7 +232,6 @@
   let currentState = $state("/"); // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
-  let populatingPage = false; // ditto for populatePage
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -272,7 +248,6 @@
 
   let fileDropActive = $state(false);
 
-  let refreshCounter = BigInt(1);
   let cacheHitCount = 0;
 
   let sideNavOpen = $state(false);
@@ -293,23 +268,21 @@
   // svelte-ignore non_reactive_update
   let numberFormatOptionsDialog: NumberFormatOptionsDialog | null = null;
 
-  let cellList: CellList;
-
   // start webworker for python calculations
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
     }    
-    error = null;
+    appState.error = null;
     pyodideLoaded = false;
     pyodideNotAvailable = false;
-    pyodideWorker = new Worker("pyodideWorker.js");
+    appState.pyodideWorker = new Worker("pyodideWorker.js");
 
-    pyodidePromise = new Promise((resolve, reject) => {
-      pyodideWorker.onmessage = function (message) {
+    appState.pyodidePromise = new Promise((resolve, reject) => {
+      appState.pyodideWorker.onmessage = function (message) {
         if (message.data === "pyodide_loaded") {
           pyodideLoaded = true;
-          error = null;
+          appState.error = null;
           resolve(true);
         } else if (message.data === "pyodide_not_avaiable") {
           pyodideNotAvailable = true;
@@ -317,18 +290,18 @@
         }
       }
     });
-    pyodideTimeout = false;
+    appState.pyodideTimeout = false;
 
     pyodideLoadingTimeoutRef = window.setTimeout(() => {
       if(!pyodideLoaded) {
-        error = "Pyodide failed to load. Refreshing page may help.";
+        appState.error = "Pyodide failed to load. Refreshing page may help.";
       }
     }, pyodideLoadingTimeoutLength);
   }
   function terminateWorker() {
-    if (pyodideWorker) {
-      pyodideWorker.terminate();
-      pyodideWorker = null;
+    if (appState.pyodideWorker) {
+      appState.pyodideWorker.terminate();
+      appState.pyodideWorker = null;
     }
   }
   startWebWorker();
@@ -338,7 +311,7 @@
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts, {capture: true});
-    window.removeEventListener("keydown", handleKeyboardEscape);
+    window.removeEventListener("keydown", handleKeyboardBubble);
     window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
@@ -360,14 +333,15 @@
     appState.prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
-    appState.unsavedChange = false;
-    appState.autosaveNeeded = false;
     await refreshSheet(true);
+
+    markSaved();
+    appState.autosaveNeeded = false;
 
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts, {capture: true});
-    window.addEventListener("keydown", handleKeyboardEscape);
+    window.addEventListener("keydown", handleKeyboardBubble);
     window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
@@ -552,7 +526,7 @@
     modalInfo = event.detail.modalInfo;
   }
 
-  function handleKeyboardShortcuts(event: KeyboardEvent) {
+  async function handleKeyboardShortcuts(event: KeyboardEvent) {
     if (event.defaultPrevented) {
       return;
     }
@@ -580,9 +554,7 @@
           return;
         } else {
           if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
-            deleteCell(appState.activeCell);
-            triggerSaveNeeded();
-            mathCellChanged();
+            await deleteCell(appState.activeCell);
           }
         }
         break;
@@ -684,12 +656,28 @@
     event.preventDefault();
   }
 
-  function handleKeyboardEscape(event: KeyboardEvent) {
+  async function handleKeyboardBubble(event: KeyboardEvent) {
     if (event.defaultPrevented) {
       return;
     }
 
     switch (event.key) {
+      case "z":
+      case "Z":
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          await undo();
+        }
+        break;
+      case "y":
+      case "Y":
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          await redo();
+        }
+        break;
       case "Esc":
       case "Escape":
         if (appState.inCellInsertMode) {
@@ -758,15 +746,14 @@
 
 
   async function initializeBlankSheet() {
-    refreshCounter++; // make all pending updates stale
+    appState.refreshCounter++; // make all pending updates stale
     currentStateObject = null;
     await resetSheet();
     await tick();
-    await addCell('math');
     triggerSaveNeeded();
     mathCellChanged();
     await tick();
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
   }
 
@@ -843,280 +830,16 @@
     await refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
-                      neededPyodidePackages: string[]) {
-    return new Promise<Results>((resolve, reject) => {
-      function handleWorkerMessage(e) {
-        forcePyodidePromiseRejection = null;
-        if (e.data === "pyodide_not_available") {
-          // pyodide didn't load properly
-          reject("Pyodide failed to load.");
-        } else if (e.data === "max_recursion_exceeded") {
-          reject("Max recursion depth exceeded.")
-        } else {
-
-          if (myRefreshCount !== refreshCounter) {
-            reject("Stale solution, re-solving. If this message persists, make an edit to trigger a recalculation.");
-          } else {
-            resolve(e.data);
-          }
-        }
-      }
-      forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
-      pyodideWorker.onmessage = handleWorkerMessage;
-      pyodideWorker.postMessage({
-        cmd: 'sheet_solve',
-        data: $state.snapshot(statementsAndSystems),
-        neededPyodidePackages
-      });
-    });
-  }
-
-  function getStatementsAndSystemsForPython(): StatementsAndSystems {
-    const statements: (Statement | SubQueryStatement)[] = [];
-    const endStatements: (Statement | SubQueryStatement)[] = [];
-    const subQueries: Map<string,SubQueryStatement> = new Map();
-    const systemDefinitions: SystemDefinition[] = [];
-    const fluidFunctions: FluidFunction[] = [];
-    const codeCellFunctions: CodeCellFunction[] = [];
-    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
-
-    for (const [cellNum, cell] of appState.cells.entries()) {
-      if (cell instanceof MathCell) {
-        if (cell.mathField.statement.type === "assignmentList") {
-          statements.push(cell.mathField.statement.assignments[0]);
-          endStatements.push(...cell.mathField.statement.assignments.slice(1));
-        } else if (cell.mathField.statement.type === "query"){
-          if ((cell.config && cell.config.showIntermediateResults) || 
-              appState.config.mathCellConfig.showIntermediateResults) {
-            if ("subQueries" in cell.mathField.statement) {
-              for (const subQuery of cell.mathField.statement.subQueries) {
-                subQueries.set(subQuery.sympy, subQuery);
-              }
-            }
-          }
-          statements.push(cell.mathField.statement);
-          if (cell.mathField.statement.assignment) {
-            endStatements.push(cell.mathField.statement.assignment);
-          }
-        } else {
-          statements.push(cell.mathField.statement);
-        }
-      } else if (cell instanceof PlotCell) {
-        for (const mathField of cell.mathFields) {
-          if (mathField.statement.type === "parametricRange") {
-            endStatements.push(...mathField.statement.assignmentStatements);
-            for (const parametricStatement of mathField.statement.rangeQueryStatements) {
-              parametricStatement.cellNum = cellNum;
-              statements.push(parametricStatement);
-            }
-          } else { 
-            if (mathField.statement.type === "query" && mathField.statement.isRange) {
-              mathField.statement.cellNum = cellNum;
-              mathField.statement.logX = cell.logX;
-            } else if (mathField.statement.type === "scatterQuery") {
-              mathField.statement.cellNum = cellNum;
-            }
-            statements.push(mathField.statement);
-          }
-        }
-      } else if (cell instanceof TableCell) {
-        endStatements.push(...cell.tableStatements);
-      } else if (cell instanceof DataTableCell) {
-        let queryCount = 0;
-        for (const [i, statement] of cell.columnStatements.entries()) {
-          if (statement) {
-            if (statement.type === "query") {
-              if (statement.isDataTableQuery) {
-                statement.cellNum = cellNum
-                statements.push(statement);
-                queryCount++;
-              }
-              if (statement.assignment) {
-                endStatements.push(statement.assignment);
-              }
-            } else {
-              endStatements.push(statement);
-            }
-          }
-        }
-        if (queryCount === 0) {
-          // no queries, need placeholder statement
-          statements.push(getBlankStatement());
-        }
-        interpolationFunctions.push(...cell.interpolationFunctions.filter(value => value !== undefined));
-      } else if (cell instanceof PiecewiseCell) {
-        if (cell.piecewiseStatement) {
-          endStatements.push(cell.piecewiseStatement);
-        }
-      } else if (cell instanceof SystemCell) {
-        const systemDefinition = cell.getSystemDefinition();
-        if (systemDefinition) {
-          systemDefinitions.push(systemDefinition);
-        }
-      } else if (cell instanceof CodeCell) {
-        const codeCellFunction = cell.getCodeCellFunction();
-        if (codeCellFunction) {
-          codeCellFunctions.push(codeCellFunction);
-        }
-      } else if (cell instanceof FluidCell) {
-        const {fluidFunction, statement} = cell.getFluidFunction(appState.config.fluidConfig);
-        if (fluidFunction) {
-          fluidFunctions.push(fluidFunction);
-          if (statement) {
-            endStatements.push(statement);
-          }
-        }
-      }
-    }
-
-    if (subQueries.size > 0) {
-      endStatements.push(...subQueries.values());
-    }
-
-    statements.push(...endStatements);
-
-    return {
-      statements: statements,
-      systemDefinitions: systemDefinitions,
-      fluidFunctions: fluidFunctions,
-      codeCellFunctions: codeCellFunctions,
-      interpolationFunctions: interpolationFunctions,
-      customBaseUnits: appState.config.customBaseUnits,
-      simplifySymbolicExpressions: appState.config.simplifySymbolicExpressions,
-      convertFloatsToFractions: appState.config.convertFloatsToFractions
-    };
-  }
-
-  function checkParsingErrors() {
-    return appState.cells.reduce(parsingErrorReducer, false)
-  }
-
-  function parsingErrorReducer(accum: boolean, cell: Cell) {
-    if (cell instanceof MathCell) {
-      return accum || cell.mathField.parsingError;
-    } else if (cell instanceof PlotCell) {
-      return accum || cell.mathFields.some(field => field.parsingError);
-    } else if (cell instanceof TableCell) {
-      return accum || cell.parameterFields.some(value => value.parsingError) ||
-                     cell.parameterUnitFields.some(value => value.parsingError) ||
-                     cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
-    } else if (cell instanceof PiecewiseCell) {
-      return accum || cell.parameterField.parsingError || 
-                     cell.expressionFields.some(value => value.parsingError) ||
-                     cell.conditionFields.some(value => value.parsingError);
-    } else if (cell instanceof SystemCell) {
-      return accum || cell.parameterListField.parsingError || 
-                     cell.expressionFields.some(value => value.parsingError);
-    } else if (cell instanceof FluidCell) {
-      return accum || cell.error;
-    } else if (cell instanceof CodeCell) {
-      return accum || cell.mathField.parsingError;
-    } else if (cell instanceof DataTableCell) {
-      return accum || cell.parameterFields.some(value => value.parsingError) ||
-                     cell.parameterUnitFields.some(value => value.parsingError);
-    } else if (cell instanceof ImportCell) {
-      return true;
-    } else {
-      return accum || false;
-    }
-  }
-
-  async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetLoad: boolean) {
-    if (localRefreshCounter !== refreshCounter) {
-      return;
-    }
-    const myRefreshCount = localRefreshCounter;
-    inDebounce = false;
-    if(noParsingErrors && !firstRunAfterSheetLoad) {
-      // invalidate results if all math fields are valid (while editing current cell)
-      // also, don't invalidate results if sheet was just loaded without modification (populatingPage === true)
-      appState.resultsInvalid = true;
-      error = "";
-    }
-    await pyodidePromise;
-    pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter && noParsingErrors) {
-      const statementsAndSystemsObject = getStatementsAndSystemsForPython()
-      clearTimeout(pyodideTimeoutRef);
-      pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
-      if (!firstRunAfterSheetLoad) {
-        appState.resultsInvalid = true;
-        error = "";
-      }
-
-      let neededPyodidePackages: Set<string> = new Set();
-      if (statementsAndSystemsObject.fluidFunctions.length > 0) {
-        neededPyodidePackages.add('coolprop');
-      }
-      if (statementsAndSystemsObject.interpolationFunctions.length > 0) {
-        neededPyodidePackages.add('numpy');
-      }
-      if (statementsAndSystemsObject.interpolationFunctions
-            .reduce((accum, value) => accum || (value.numInputs > 1), false)) {
-        neededPyodidePackages.add('scipy');
-      }
-      if (statementsAndSystemsObject.interpolationFunctions
-            .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
-        neededPyodidePackages.add('scikit-learn');
-      }
-
-      for (const codeCellFunction of statementsAndSystemsObject.codeCellFunctions) {
-        neededPyodidePackages = neededPyodidePackages.union(new Set(codeCellFunction.neededPyodidePackages));
-      }
-
-      pyodidePromise = getResults(statementsAndSystemsObject,
-                                  myRefreshCount, [...neededPyodidePackages])
-      .then((data: Results) => {
-        clearResults();
-        appState.resultsInvalid = false;
-        if (!data.error && data.results.length > 0) {
-          let counter = 0;
-          for (const [i, cell] of appState.cells.entries()) {
-            if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
-              appState.results[i] = data.results[counter++];
-            } else {
-              appState.results[i] = null;
-            }
-          }
-          while(counter < data.results.length) {
-            const currentResult = data.results[counter++];
-            if ("isSubResult" in currentResult && currentResult.isSubResult) {
-              appState.sub_results.set(currentResult.subQueryName, currentResult);
-            }
-          }
-        }
-        error = data.error;
-        appState.system_results = [];
-        let counter = 0;
-        for (const [i, cell] of appState.cells.entries()) {
-          if (cell.type === "system") {
-            appState.system_results[i] = data.systemResults[counter++]
-          } else {
-            appState.system_results[i] = null;
-          }
-        }
-        if (!firstRunAfterSheetLoad) {
-          appState.autosaveNeeded = true;
-        }
-        appState.codeCellResults = data.codeCellResults ?? {};
-      })
-      .catch((errorMessage) => error=errorMessage);
-    }
-  }
-
-  const debounceHandleCellUpdate = debounce(handleCellUpdate, 300);
-
   async function restartPyodide() {
     // reject any pending promise and restart webworker
-    if (forcePyodidePromiseRejection) {
-      forcePyodidePromiseRejection();
+    if (appState.forcePyodidePromiseRejection) {
+      appState.forcePyodidePromiseRejection();
     }
-    await pyodidePromise;
+    await appState.pyodidePromise;
     terminateWorker();
     startWebWorker();
     clearResults();
-    refreshCounter++; // make all pending updates stale
+    appState.refreshCounter++; // make all pending updates stale
   }
 
   async function uploadSheet(resultModal = true): Promise<string> {
@@ -1168,7 +891,7 @@
         };
       }
 
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
 
       appState.history = responseObject.history;
@@ -1249,14 +972,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
         heading: "Retrieving Sheet"
       };
       appState.cells = [];
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
 
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
 
     if (!inIframe && appState.cells.some(item => item instanceof CodeCell)) {
@@ -1274,48 +997,40 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
-    if (populatingPage) {
+    if (appState.populatingPage) {
       // populatePage already in progress, error out so current process can finish
       return true;
     }
 
     try{
-      refreshCounter++; // make all pending updates stale
+      appState.refreshCounter++; // make all pending updates stale
 
-      populatingPage = true;
+      appState.populatingPage = true;
 
-      appState.cells = [];
       clearResults();
       appState.resultsInvalid = true;
       appState.activeCell = -1;
 
-      await tick();
+      await applySheetObject(sheet);
 
-      appState.title = sheet.title;
-      BaseCell.nextId = sheet.nextId;
-      appState.sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property
-      appState.insertedSheets = sheet.insertedSheets ?? [];
-      appState.config = normalizeConfig(sheet.config);
-
-      appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+      resetSheetUndoHistory();
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         appState.history = requestHistory;
       }
 
-      await tick(); // this will populate mathFieldElement and richTextInstance fields
-
       // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
       // new MathField instances have their parsePending value initial set to true.
       // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
-      while(inDebounce || appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
+      await tick();
+
+      while(appState.inDebounce || appState.parsePending || !appState.cellListElement || appState.cellListElement.getParsePending()) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
         })
       }
 
-      if (noParsingErrors) {
+      if (appState.noParsingErrors) {
         if (appState.results.length === 0) { // only set results if results haven't already been recalculated
           appState.results = sheet.results;
           appState.resultsInvalid = false;
@@ -1331,11 +1046,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);
-      populatingPage = false;
+      appState.populatingPage = false;
       return true;
     }
 
-    populatingPage = false;
+    appState.populatingPage = false;
     return false;
   }
 
@@ -1406,12 +1121,29 @@ Please include a link to this sheet in the email to assist in debugging the prob
             modalOpen: true, 
             heading: 'Importing Spreadsheet'
           };
-        await tick();
 
         await DataTableCell.init();
         const newDataTableCell = new DataTableCell();
+
+        appState.cells = [...appState.cells, newDataTableCell];
+        const newCellIndex = appState.cells.length - 1;
+        await tick();
+
+        const dataTableElement = appState.cellListElement?.getCellElement(newCellIndex)?.getCellElement();
+
+        if (!dataTableElement || !('loadFile' in dataTableElement)) {
+          modalInfo = {
+            state: "error",
+            error: 'Internal error, inserted cell not a data table cell. Report error to support@engineeringpaper.com',
+            modalOpen: true,
+            heading: "Importing Spreadsheet"
+          };
+
+          return;
+        }
+
         try {
-          await newDataTableCell.loadFile(file);
+          await dataTableElement.loadFile(file);
         } catch (e) {
           modalInfo = {
             state: "error",
@@ -1425,9 +1157,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         
         modalInfo.modalOpen = false;
 
-        appState.cells = [...appState.cells, newDataTableCell];
-        const newCellIndex = appState.cells.length - 1;
         await tick();
+
         const inputElement = document.getElementById(`data-table-input-${newCellIndex}-0-0`);
         if (inputElement) {
           // focus table so it scrolls into view since it will be placed at the end of the sheet
@@ -1544,7 +1275,7 @@ with the file that is not opening attached, if possible. </p>`,
       };
 
       appState.cells = [];
-      appState.unsavedChange = false;
+      markSaved();
       appState.autosaveNeeded = false;
       return;
     }
@@ -1556,7 +1287,7 @@ with the file that is not opening attached, if possible. </p>`,
     }
 
     modalInfo.modalOpen = false;
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
 
     if (appState.cells.some(item => item instanceof CodeCell)) {
@@ -1667,13 +1398,190 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  function loadGenerateCodeModal(e: any) {
+  let generatedCode = $state("");
+
+  async function loadGenerateCodeModal(e: any) {
+    const index = e.detail.index;
+    const statement = e.detail.statement;
+    const cell = appState.cells[index];
+
+    generatedCode = "";
+
+    if (!(cell instanceof MathCell) || statement?.type !== "query" || !statement.isCodeFunctionQuery) {
+      return;
+    }
+
     modalInfo = {
       modalOpen: true,
       state: "generateCode",
       heading: "Generate Code From Function",
-      codeGenerationIndex: e.detail.index
     };
+
+    appState.codeGenerationSource = index;
+
+    await tick();
+
+    mathCellChanged();
+
+    await new Promise((resolve, _reject) => setTimeout(resolve, debounceTime + 100));
+    await appState.pyodidePromise;
+
+    let result: Result | MatrixResult | RenderResult | null;
+    const tempResult = appState.results[index];    
+    if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
+      result = tempResult;
+    } else {
+      result = null;
+    }
+
+    function getUnitsDescription(unitsString: string): string {
+      if (unitsString === "") {
+        return "is unitless.";
+      } else {
+        return `has units of [${unit(unitsString).formatUnits()}].`;
+      }
+    }
+
+    function getMatrixUnitsResult(result: MatrixResult, userUnit: string) {
+      const resultUnitRows = [];
+      
+      if (userUnit) {
+        const formattedUserUnit = unit(userUnit).formatUnits();
+        for (const [i, row] of result.results.entries()) {
+          const resultUnitRow = [];
+          resultUnitRows.push(resultUnitRow);
+          for (const[j, _] of row.entries()) {
+            resultUnitRow.push(formattedUserUnit);
+          }
+        }
+      } else {
+        for (const [i, row] of result.results.entries()) {
+          const resultUnitRow = [];
+          resultUnitRows.push(resultUnitRow);
+          for (const[j, value] of row.entries()) {
+            if (value.units) {
+              resultUnitRow.push(unit(value.units).formatUnits());
+            } else {
+              resultUnitRow.push("unitless");
+            }
+          }
+        }
+      }
+
+      return `is a matrix with units [[${resultUnitRows.map(row => row.join(", ")).join('], [')}]]`;
+    }
+
+    const parameterMap = (name: string, index: number) => {
+      return `    ${name} : float\n        '${name}' ${getUnitsDescription(statement.parameterUnits[index])}`;
+    }
+
+    const parameterConversionMap = (name: string, index: number) => {
+      const currentUnit = statement.parameterUnits[index];
+
+      if (currentUnit === "") {
+        return "";
+      }
+      
+      const { scaleFactor, offset } = getConversionFactor(currentUnit);
+
+      if (offset === 0) {
+        if (scaleFactor === 1) {
+          return "";
+        } else {
+          return `    ${name} = ${name} * ${scaleFactor}`;
+        }
+      } else {
+        if (scaleFactor === 1) {
+          return `    ${name} = ${name} + ${offset}`;
+        } else {
+          return `    ${name} = (${name} + ${offset}) * ${scaleFactor}`;
+        }
+      }
+    }
+
+    function getReturnConversion(outputUnit: string) {
+      if (outputUnit === "") {
+        return "return result";
+      }
+      
+      const { scaleFactor, offset } = getConversionFactor(outputUnit);
+
+      if (offset === 0) {
+        if (scaleFactor === 1) {
+          return `return result`;
+        } else {
+          return `return result / ${scaleFactor}`;
+        }
+      } else {
+        if (scaleFactor === 1) {
+          return `return result - ${offset}`;
+        } else {
+          return `return (result / ${scaleFactor}) - ${offset}`;
+        }
+      }
+    }
+
+    function codeTemplate(statement: CodeFunctionQueryStatement, result: Result | FiniteImagResult | MatrixResult) {
+      if (result.generatedCode.startsWith('# Error')) {
+        return result.generatedCode;
+      } else {
+        let userReturnUnits = "";
+
+        if (isMatrixResult(result)) {
+          let matrixUnits = new Set<string>();
+          for (const row of result.results) {
+            for (const value of row) {
+              matrixUnits.add(value.units);
+            }
+          }
+          if (matrixUnits.size === 1) {
+            if (statement.units) {
+              userReturnUnits = statement.units;
+            } else if (result.results[0][0].customUnitsDefined) {
+              userReturnUnits = result.results[0][0].customUnits;
+            }
+          }
+        } else if (statement.units) {
+          userReturnUnits = statement.units;
+        } else if (result.customUnitsDefined) {
+          userReturnUnits = result.customUnits;
+        }
+
+    const finalCode = `${result.generatedCode.includes('numpy') ? "import numpy\n\n": ""}def ${statement.functionName}(${statement.parameterNames.join(", ")}):
+    """
+    Function '${statement.functionName}' automatically generated by EngineeringPaper.xyz
+
+    Parameters
+    ----------
+${statement.parameterNames.map(parameterMap).join("\n")}
+
+    Returns
+    -------
+    ${isMatrixResult(result) ? "numpy.array" : "float"}
+        Return value ${isMatrixResult(result) ? getMatrixUnitsResult(result, userReturnUnits) : getUnitsDescription(userReturnUnits ? userReturnUnits : result.units)}
+    """
+${statement.parameterNames.map(parameterConversionMap).filter(value => value !== "").map((row, i) => i === 0 ? "\n"+row : row).map(row => row+"\n").join("")}
+    result = ${result.generatedCode}
+
+    ${getReturnConversion(userReturnUnits)}
+`;
+  
+
+        return finalCode.replaceAll("_as_variable", "");
+      }
+    }
+
+    if (statement && result && "generatedCode" in result && result.generatedCode) {
+      try {
+        generatedCode = codeTemplate(statement, result);
+      } catch(e) {
+        generatedCode = `# Error generating code: ${e} If this error persists, report to support@engineeringpaper.com with the sheet that generates the error.`;
+      }
+    } else if (appState.error) {
+      generatedCode = `# Error generating code: ${appState.error} If this error persists, report to support@engineeringpaper.com with the sheet that generates the error.`;
+    } else {
+      generatedCode = "# No code generated, close this dialog window and try again. If this issue persists, report to support@engineeringpaper.com with the sheet that generates the error.";
+    }
   }
 
   function loadSaveSheetModal(e: any) {
@@ -1884,7 +1792,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       saveFileBlob(fileData, `${appState.title}.epxyz`);
     }
 
-    appState.unsavedChange = false;
+    markSaved();
     appState.autosaveNeeded = false;
   }
 
@@ -2038,7 +1946,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.modalOpen = false;
     }
 
-    markdown += await cellList.getMarkdown(centerEquations);
+    markdown += await appState.cellListElement.getMarkdown(centerEquations);
 
     return markdown;
   }
@@ -2111,7 +2019,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function toggleAlwaysHideKeyboard(activeMathField: MathField) {
+  async function toggleAlwaysHideKeyboard(activeMathField: MathfieldElement) {
     alwaysHideKeyboard = !alwaysHideKeyboard;
     try {
       await set('alwaysHideKeyboard', alwaysHideKeyboard);
@@ -2119,7 +2027,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       console.log(`Error setting alwaysHideKeyboard: ${e}`);
     }
     if (activeMathField) {
-      activeMathField.element.focus();
+      activeMathField.focus();
     }
   }
 
@@ -2136,13 +2044,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
     if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
            || event instanceof MouseEvent ) 
-        && appState.activeMathField?.element?.getMathField() )
+        && appState.activeMathField )
     {
       if ( !isVisible(
-               appState.activeMathField.element.getMathField().parentElement,
+               appState.activeMathField.parentElement,
                document.getElementById('main-content')) 
           ) {
-        appState.activeMathField.element.getMathField().parentElement.scrollIntoView({
+        appState.activeMathField.parentElement.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });
@@ -2208,31 +2116,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  function handleCustomMatrix(event: CustomEvent<{targetMathField: MathField}>) {
+  function handleCustomMatrix(event: CustomEvent<{targetMathField: MathfieldElement}>) {
     modalInfo = {
       modalOpen: true,
       state: "customMatrix",
       heading: "Insert Matrix",
       targetMathField: event.detail.targetMathField
     };
-  }
-
-  function mathCellChanged() {
-    refreshCounter++;
-    noParsingErrors = !checkParsingErrors();
-
-    inDebounce = true;
-    debounceHandleCellUpdate(refreshCounter, populatingPage);
-  }
-
-  function triggerSaveNeeded(pendingMathCellChange = false) {
-    if (pendingMathCellChange) {
-      refreshCounter++;
-      inDebounce = true;
-    }
-    
-    appState.unsavedChange = true;
-    appState.autosaveNeeded = true;
   }
 
   $effect(() => {
@@ -2348,6 +2238,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
   :global(.bx--side-nav__menu a.bx--side-nav__link) {
     height: fit-content !important;
     padding-right: 0px;
+  }
+
+  :global(.bx--btn--disabled) {
+    background: none !important;
+    border-color: transparent !important;
   }
 
   div.side-nav-title {
@@ -2648,12 +2543,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleFileOpen}
           icon={Document}
         />
-        <HeaderGlobalAction
-          id="save-sheet"
-          iconDescription="Save Sheet to File in Various Formats"
-          on:click={loadSaveSheetModal}
-          icon={Download}
-        />
+        <div class="dot-container">
+          <HeaderGlobalAction
+            id="save-sheet"
+            iconDescription={"Save Sheet to File in Various Formats" + (appState.unsavedChange ? " (Save Needed)" : "")}
+            on:click={loadSaveSheetModal}
+            icon={Download}
+          />
+          {#if appState.unsavedChange}
+            <div class="dot"></div>
+          {/if}
+        </div>
         <HeaderGlobalAction
           id="upload-sheet"
           iconDescription="Get Shareable Link"
@@ -2680,17 +2580,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
         </div>
         <HeaderGlobalAction
-          iconDescription="Supported Units"
+          iconDescription={`Undo ${appState.undoDescription}`}
           tooltipAlignment="end"
-          on:click={handleUnitsModal}
-          icon={Ruler}
+          disabled={!appState.undoAvailable}
+          on:click={undo}
+          icon={Undo}
         />
         <HeaderGlobalAction 
           class="hide-when-narrow" 
-          iconDescription="Keyboard Shortcuts"
+          iconDescription={`Redo ${appState.redoDescription}`}
           tooltipAlignment="end"
-          on:click={handleKeyboardShortcutsModal}
-          icon={Keyboard}
+          disabled={!appState.redoAvailable}
+          on:click={redo}
+          icon={Redo}
         />
         <HeaderGlobalAction 
           iconDescription="Try the Desktop App"
@@ -2721,6 +2623,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           href={`${window.location.origin}/docs/ep_quick_reference.pdf`}
           text="Quick Reference Guide"
           target="_blank"
+        />
+        <SideNavLink 
+          on:click={handleUnitsModal}
+          text="Supported Units"
+        />
+        <SideNavLink 
+          on:click={handleKeyboardShortcutsModal}
+          text="Keyboard Shortcuts"
         />
         <SideNavMenu text="Example Sheets">
           {#each exampleSheets as {path, title} (path)}
@@ -2910,9 +2820,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         updateDataTableNumberFormat={loadDataTableNumberFormatModal}
         generateCode={loadGenerateCodeModal}
         modal={handleCellModal}
-        bind:this={cellList}
-        {mathCellChanged}
-        {triggerSaveNeeded}
+        bind:this={appState.cellListElement}
       />
 
       <div class="print-logo">
@@ -2961,14 +2869,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <button onclick={acceptTerms}>Accept</button>
     </div>
   {:else}
-    {#if noParsingErrors || appState.parsePending}
-      {#if (inDebounce || appState.parsePending) && !pyodideNotAvailable && pyodideLoaded}
+    {#if appState.noParsingErrors || appState.parsePending}
+      {#if (appState.inDebounce || appState.parsePending) && !pyodideNotAvailable && pyodideLoaded}
         <div class="status-footer">
           <InlineLoading status="inactive" description="Updating..."/>
         </div>
       {:else}
-        {#await pyodidePromise}
-          {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+        {#await appState.pyodidePromise}
+          {#if !pyodideLoaded && !pyodideNotAvailable && !appState.error}
             <div class="status-footer promise">
               <InlineLoading description="Loading Pyodide..."/>
             </div>
@@ -2978,7 +2886,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
               onmousedown={e=>e.preventDefault()}
             >
               <InlineLoading description="Updating..."/>
-              {#if pyodideTimeout}
+              {#if appState.pyodideTimeout}
                 <button onclick={restartPyodide}>Restart Pyodide</button>
               {/if}
             </div>
@@ -2989,9 +2897,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
           </div>
         {/await}
       {/if}
-      {#if error && !inDebounce}
+      {#if appState.error && !appState.inDebounce}
         <div class="status-footer">
-          <InlineLoading status="error" description={`Error: ${error}`} />
+          <InlineLoading status="error" description={`Error: ${appState.error}`} />
         </div>
       {/if}
       {#if pyodideNotAvailable}
@@ -3206,10 +3114,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
           <GenerateCodeDialog
-            index={modalInfo.codeGenerationIndex}
-            {pyodidePromise}
-            {mathCellChanged}
-            {triggerSaveNeeded}
+            {generatedCode}
           />
         {:else if modalInfo.state === "pyodideRuntimeWarning"}
           {#if modalInfo.runtimeInfo.oldRuntime}

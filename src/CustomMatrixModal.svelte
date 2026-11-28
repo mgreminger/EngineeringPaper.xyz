@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type { MathField } from "./cells/MathField.svelte";
+  import type { MathfieldElement } from "mathlive";
   import { MAX_MATRIX_COLS } from "./constants";
   import { getBlankMatrixLatex } from "./utility";
 
   import { Modal, NumberInput } from "carbon-components-svelte";
 
   interface Props {
-    targetMathField: MathField;
+    targetMathField: MathfieldElement;
     open: boolean;
   }
 
@@ -19,9 +19,8 @@
   let numColumns = $state(1);
 
   function insertMatrix() {
-    if (numRows > 0 && numColumns > 0 && numColumns <= MAX_MATRIX_COLS && targetMathField && targetMathField.element) {
-      const mathLiveField = targetMathField.element.getMathField();
-      mathLiveField.executeCommand(["insert", getBlankMatrixLatex(numRows, numColumns)]);
+    if (numRows > 0 && numColumns > 0 && numColumns <= MAX_MATRIX_COLS && targetMathField) {
+      targetMathField.executeCommand(["insert", getBlankMatrixLatex(numRows, numColumns)]);
       open = false;
     }
   }

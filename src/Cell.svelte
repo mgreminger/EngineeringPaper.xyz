@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import appState from "./stores.svelte";
-  import { handleClickInCell, deleteCell } from "./stores.svelte";
-  import type { ModalInfo } from "./types";
+  import { handleClickInCell, deleteCell, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
+  import type { CellStatements, ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
@@ -13,7 +13,6 @@
   import SystemCellElement from "./SystemCell.svelte";
   import FluidCellElement from "./FluidCell.svelte";
   import CodeCellElement from "./CodeCell.svelte";
-  import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
   import ImportCellElement from "./ImportCell.svelte";
   import PageBreakCellElement from "./PageBreakCell.svelte";
@@ -25,7 +24,6 @@
   import DocumentationCell from "./cells/DocumentationCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
-  import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
@@ -37,32 +35,30 @@
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
   import IconButton from "./IconButton.svelte";
+  import type { Cell } from "./cells/Cells";
 
   interface Props {
     index: number;
+    cell: Cell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
+    cell,
     updateNumberFormat,
     updateDataTableNumberFormat,
     generateCode,
     modal,
     startDrag,
     insertSheet,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
-  let cell = $derived(appState.cells[index]);
   let selected = $derived(appState.activeCell === index);
 
   let contentDiv: HTMLDivElement;
@@ -71,7 +67,7 @@
   // svelte-ignore non_reactive_update
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
-                   SystemCellElement | DeletedCellElement | InsertCellElement |
+                   SystemCellElement | InsertCellElement |
                    FluidCellElement | DataTableCellElement | ImportCellElement |
                    PageBreakCellElement;
 
@@ -84,6 +80,34 @@
     } 
   });
 
+  export function getCellElement() {
+    return cellElement;
+  }
+
+  export function getParsePending(): boolean {
+    if (cellElement) {
+      return cellElement.getParsePending?.() ?? false;
+    } else {
+      return false;
+    }
+  }
+
+  export function getParsingError(): boolean {
+    if (cellElement) {
+      return cellElement.getParsingError?.() ?? false;
+    } else {
+      return false;
+    }
+  }
+
+  export function getCellStatements(): CellStatements | null {
+    if (cellElement) {
+      return cellElement.getCellStatements?.() ?? null;
+    } else {
+      return null;
+    }
+  }
+
   export async function getMarkdown(centerEquations: boolean): Promise<string> {
     if (cellElement) {
       return await cellElement.getMarkdown?.(centerEquations) ?? "";
@@ -93,10 +117,6 @@
   }
 
   onMount(() => {
-    if(cell instanceof DeletedCell && cell.height > 0) {
-      contentDiv.setAttribute("style", `height: ${cell.height}px;`);
-    }
-
     dragHandleElement.addEventListener("touchstart", dispatchStartDrag, {passive: false});
   });
 
@@ -268,31 +288,24 @@
       <MathCellElement
         {updateNumberFormat}
         {generateCode}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         mathCell={cell}
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         plotCell={cell}
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
@@ -300,8 +313,6 @@
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
         {modal}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         {updateDataTableNumberFormat}
         bind:this={cellElement}
         index={index}
@@ -309,8 +320,6 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
@@ -339,14 +348,6 @@
         index={index}
         codeCell={cell}
       />
-    {:else if cell instanceof DeletedCell}
-      <DeletedCellElement
-        bind:this={cellElement}
-        index={index}
-        deletedCell={cell}
-        {mathCellChanged}
-        {triggerSaveNeeded}
-      />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         {insertSheet}
@@ -372,7 +373,7 @@
   <div class="controls right">
     <IconButton
       id={`delete-${index}`}
-      click={() => {deleteCell(index); triggerSaveNeeded(); mathCellChanged();}}
+      click={() => {deleteCell(index)}}
       title="Delete Cell"
     >
       <TrashCan />

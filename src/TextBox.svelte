@@ -7,19 +7,48 @@
     textContent: string;
     enter: () => void;
     oninput: FormEventHandler<HTMLDivElement>;
+    commit?: () => void;
   }
 
- let {
-  id,
-  textContent=$bindable(),
-  enter,
-  oninput
- }: Props = $props();
+  let {
+    id,
+    textContent = $bindable(),
+    enter,
+    oninput,
+    commit
+  }: Props = $props();
+
+  let lastKnownText = "";
+  let isDirty = false;
+
+  $effect(() => {
+    if (textContent !== lastKnownText) {
+      isDirty = false;
+      lastKnownText = textContent;
+    }
+  });
+
+  const handleInput: FormEventHandler<HTMLDivElement> = (e) => {
+    isDirty = true;
+    lastKnownText = e.currentTarget.textContent ?? "";
+    oninput(e);
+  };
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key == 'Enter' && !e.shiftKey && !e[appState.modifierKey]) {      
       e.preventDefault();
+      if (isDirty) {
+        isDirty = false;
+        commit?.();
+      }
       enter();
+    }
+  }
+
+  function handleFocusOut(e: FocusEvent) {
+    if (isDirty && (e.currentTarget as HTMLDivElement).isConnected) {
+      isDirty = false;
+      commit?.();
     }
   }
 </script>
@@ -47,8 +76,9 @@
   class="editable"
   contenteditable="true"
   onkeydown={handleKeyDown}
+  onfocusout={handleFocusOut}
   id={id}
   bind:textContent
-  {oninput}
+  oninput={handleInput}
 >
 </div>
