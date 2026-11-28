@@ -52,7 +52,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // insert math cell using modifier-Enter
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('1');
   
   await page.keyboard.type('y=4');
@@ -63,9 +63,9 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // test escape out of insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('Escape');
-  await page.locator('text=Math Cell').waitFor({state: "detached", timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({state: "detached", timeout: 1000});
 
   // test double modifier-D to delete cell
   await page.keyboard.press(modifierKey+"+D");
@@ -73,7 +73,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // test add system solve cell with insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('7');
 
   await page.keyboard.type('8=y');
@@ -85,28 +85,28 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   // test add documentation cell with insert cell dialog 
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('2');
 
   await page.locator('.ql-toolbar').waitFor({timeout: 1000});
 
   // test add plot cell with insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('3');
 
   await page.locator('text=log x').waitFor({timeout: 2000});
 
   // test add table
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('4');
 
   await page.locator('text=Option 1').waitFor({timeout: 1000});
 
   // test add piecewise
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Math Cell').waitFor({timeout: 1000});
+  await page.getByText('Math Cell', { exact: true }).waitFor({ timeout: 1000 });
   await page.keyboard.press('6');
 
   await page.locator('text=otherwise').waitFor({timeout: 1000});
