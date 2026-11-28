@@ -246,6 +246,7 @@
 
   async function handleSelectedRowChange() {
     triggerSaveNeeded(true);
+    storeUndoDiff("Change Selector Table Selected Row");
     await parseTableStatements();
     mathCellChanged();
   }
@@ -281,6 +282,7 @@
   function addColumn() {
     tableCell.addColumn();
     triggerSaveNeeded();
+    storeUndoDiff("Add Selector Table Column");
     mathCellChanged();
   }
 
@@ -292,12 +294,14 @@
     }
 
     triggerSaveNeeded(true);
+    storeUndoDiff("Delete Selector Table Row");
     mathCellChanged();
   }
 
   async function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     triggerSaveNeeded(true);
+    storeUndoDiff("Delete Selector Table Column");
 
     await parseTableStatements();
 
@@ -327,6 +331,7 @@
       tableCell.constructedFromDataTable = false;
       tableCell.sourceDataTableCell = null;
       triggerSaveNeeded();
+      storeUndoDiff("Restore Data Table");
       mathCellChanged();
     }
   }
@@ -444,7 +449,7 @@
         hideToolbar={hideToolbar}
         bind:ops={tableCell.rowOpsArray[tableCell.selectedRow]}
         update={triggerSaveNeeded}
-        commit={() => storeUndoDiff("Edit Row Documentation")}
+        commit={() => storeUndoDiff("Edit Selector Table Row Documentation")}
       />
     {/key}
   </div>
@@ -490,6 +495,7 @@
         update={parseLatex}
         bind:latex={tableCell.parameterLatexs[j]}
         bind:parsingState={parameterParsingStates[j]}
+        commit={() => storeUndoDiff("Edit Selector Table Parameter Name")}
       />
       {#if parameterParsingStates[j].parsingError && !parameterParsingStates[j].parsePending}
         <TooltipIcon direction="right" align="end">
@@ -512,6 +518,7 @@
         bind:latex={tableCell.parameterUnitLatexs[j]}
         update={parseLatex}
         bind:parsingState={parameterUnitParsingStates[j]}
+        commit={() => storeUndoDiff("Edit Selector Table Column Units")}
       />
       
       {#if parameterUnitParsingStates[j].parsingError && !parameterUnitParsingStates[j].parsePending}
@@ -543,6 +550,7 @@
           id={`row-label-${index}-${i}`}
           bind:textContent={tableCell.rowLabels[i]} 
           oninput={() => triggerSaveNeeded()}
+          commit={() => storeUndoDiff("Edit Selector Table Row Label")}
         >
         </TextBox>
       </div>
@@ -562,6 +570,7 @@
             update={parseLatex}
             enter={() => handleEnter(i)}
             bind:parsingState={rhsParsingStates[i][j]}
+            commit={() => storeUndoDiff("Edit Selector Table Entry")}
           />
           {#if rhsParsingStates[i][j].parsingError && !rhsParsingStates[i][j].parsePending}
             <TooltipIcon direction="right" align="end">
@@ -666,7 +675,7 @@
         <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          click={() => {tableCell.hideUnselected = false; triggerSaveNeeded();}}
+          click={() => {tableCell.hideUnselected = false; triggerSaveNeeded(); storeUndoDiff("Show All Selector Table Rows")}}
         >
           <ShowDataCards />
         </IconButton>
@@ -674,7 +683,7 @@
         <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          click={() => {tableCell.hideUnselected = true; triggerSaveNeeded();}}
+          click={() => {tableCell.hideUnselected = true; triggerSaveNeeded(); storeUndoDiff("Hide Unselected Selector Table Rows")}}
         >
           <Row />
         </IconButton>
